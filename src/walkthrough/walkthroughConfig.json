@@ -1,0 +1,221 @@
+{
+  "experimentName": "Three-Phase Power by Two-Wattmeter Method",
+  "defaultLocale": "en",
+  "locales": [
+    "en"
+  ],
+  "audio": {
+    "autoplay": false
+  },
+  "steps": [
+    {
+      "id": 1,
+      "target": "#experiment-title-board",
+      "title": {
+        "en": "Aim"
+      },
+      "description": {
+        "en": "Measure the power consumed by a three-phase resistive load using the two-wattmeter method for Star and Delta connections."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 2,
+      "target": "#instruction-button",
+      "title": {
+        "en": "Instructions"
+      },
+      "description": {
+        "en": "Read the connection sequence and procedure for the selected load configuration."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 3,
+      "target": "#load-configuration-panel",
+      "title": {
+        "en": "Star / Delta"
+      },
+      "description": {
+        "en": "Choose the load configuration with the MCB off. When converting Star to Delta, keep the supply and meter wires. Replace (17–19), (19–21) with (16–19), (18–21), (17–20)."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 4,
+      "target": "#ai-guide-button",
+      "title": {
+        "en": "AI Guide"
+      },
+      "description": {
+        "en": "Get spoken guidance and highlighted terminals for the next required connection. Click again to stop."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 5,
+      "target": "#check-button",
+      "title": {
+        "en": "Check"
+      },
+      "description": {
+        "en": "Verify the selected circuit. Correct any Invalid Connections before proceeding after Right Connections."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 6,
+      "target": "#auto-connect-button",
+      "title": {
+        "en": "Auto Connect"
+      },
+      "description": {
+        "en": "Make the selected load connections automatically, then click CHECK."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 7,
+      "target": "#power-supply",
+      "title": {
+        "en": "MCB"
+      },
+      "description": {
+        "en": "After verification, switch on the MCB to energize the three-phase load. Switch it off before editing wires or changing configuration. Terminals: 1, 2, 3."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 8,
+      "target": "#voltmeter-meter",
+      "title": {
+        "en": "Voltmeter"
+      },
+      "description": {
+        "en": "Measure line voltage VL between two phases. Terminals: 4, 5. The experiment uses 408 V."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 9,
+      "target": "#ammeter-meter",
+      "title": {
+        "en": "Ammeter"
+      },
+      "description": {
+        "en": "Measure line current IL. Terminals: 6, 7. Star reads 0.5 A and Delta reads 1.2 A."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 10,
+      "target": "#wattmeter-1",
+      "title": {
+        "en": "Wattmeter W1"
+      },
+      "description": {
+        "en": "The first wattmeter measures one part of the total three-phase power. Terminals: 8, 9, 10, 11."
+      },
+      "placement": "top"
+    },
+    {
+      "id": 11,
+      "target": "#wattmeter-2",
+      "title": {
+        "en": "Wattmeter W2"
+      },
+      "description": {
+        "en": "The second wattmeter completes the two-wattmeter measurement. Terminals: 12, 13, 14, 15. Total measured power is W1 + W2."
+      },
+      "placement": "top"
+    },
+    {
+      "id": 12,
+      "target": "#lamp-load",
+      "title": {
+        "en": "Lamp Load"
+      },
+      "description": {
+        "en": "The three load branches have left terminals 16, 18, 20 and right terminals 17, 19, 21. Lamps are off until the verified MCB is on. Star glows dimly; Delta glows brightly."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 13,
+      "target": "#add-reading-button",
+      "title": {
+        "en": "Add Reading"
+      },
+      "description": {
+        "en": "Record VL, IL, W1, W2 and their total. Record one reading for each configuration."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 14,
+      "target": "#observation-table-panel",
+      "title": {
+        "en": "Observation Table"
+      },
+      "description": {
+        "en": "Compare the Star and Delta readings. Star total power is 370 W; Delta total power is 840 W."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 15,
+      "target": "#formula-section-panel",
+      "title": {
+        "en": "Formulas"
+      },
+      "description": {
+        "en": "For the resistive load, cosφ = 1 and theoretical power P = √3 × VL × IL. Compare W1 + W2 with P to calculate percentage error."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 16,
+      "target": "#plot-button",
+      "title": {
+        "en": "Plot"
+      },
+      "description": {
+        "en": "After adding both readings, plot the power comparison and measurement errors."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 17,
+      "target": "#generate-report-button",
+      "title": {
+        "en": "Generate Report"
+      },
+      "description": {
+        "en": "After plotting, generate the experiment report with observations, calculations, graph and result."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 18,
+      "target": "#reset-button",
+      "title": {
+        "en": "Reset"
+      },
+      "description": {
+        "en": "Clear connections and readings and return to the initial Star setup."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 19,
+      "target": "#print-button",
+      "title": {
+        "en": "Print"
+      },
+      "description": {
+        "en": "Print the simulation using the browser print dialog."
+      },
+      "placement": "right"
+    }
+  ]
+}
