@@ -8,12 +8,11 @@ const PowerSupply = ({ onTogglePower, powerOn }) => (
     <div className="mcb-device__terminal-strip">
       {[1, 2, 3].map((number) => (
         <ApparatusTerminal key={number} number={number} owner="MCB" polarity={number === 1 ? 'plus' : 'minus'}
-          variant="mcb" x={`${20 + (number - 1) * 30}%`} y="45%" labelY="92%" />
+          variant="mcb" x={`${20 + (number - 1) * 30}%`} y="45%" labelY="calc(100% + 16px)" />
       ))}
     </div>
     <button id="power-toggle-button" aria-label={`Switch MCB ${powerOn ? 'off' : 'on'}`}
       aria-pressed={powerOn} className="mcb-device__button" onClick={onTogglePower} type="button" />
-    <span className="mcb-device__state">{powerOn ? 'ON' : 'OFF'} · 3 PHASE</span>
   </article>
 )
 export default PowerSupply

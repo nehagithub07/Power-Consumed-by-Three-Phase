@@ -9,7 +9,7 @@ const Wattmeter = ({ number, value = 0 }) => {
   const meterDisplay = useMeterDisplay(value, wattmeterNeedleRotation)
   const firstTerminal = number === 1 ? 8 : 12
   return (
-    <article className="lab-meter lab-meter--wattmeter" id={`wattmeter-${number}`} aria-label={`Wattmeter W${number}`}>
+    <article className="lab-meter lab-meter--wattmeter" id={`wattmeter-${number}`} aria-label={`Wattmeter W${number}: ${value} W`}>
       <span className="lab-meter__image-frame">
         <img alt={`Wattmeter W${number}`} className="lab-meter__image" src={number === 1 ? wattmeterOneImg : wattmeterTwoImg} />
       </span>
@@ -19,7 +19,6 @@ const Wattmeter = ({ number, value = 0 }) => {
           polarity={offset === 0 ? 'plus' : 'minus'} variant="wattmeter"
           x={`${16.5 + offset * 22}%`} y="81%" labelY="104%" />
       ))}
-      <output className="meter-reading" aria-label={`W${number} reading`}>{value} W</output>
     </article>
   )
 }

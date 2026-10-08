@@ -8,7 +8,7 @@ import {
   ButtonIcon,
   CheckIcon,
   CloseIcon,
-  PlotIcon,
+  FormulaIcon,
   PrintIcon,
   ResetIcon,
 } from './Icons.jsx'
@@ -50,11 +50,11 @@ const buttons = [
     handlerName: 'onAdd',
   },
   {
-    id: 'plot-button',
-    label: 'PLOT',
+    id: 'calculate-button',
+    label: 'CALCULATE',
     tone: 'action-button--orange',
-    Icon: PlotIcon,
-    handlerName: 'onPlot',
+    Icon: FormulaIcon,
+    handlerName: 'onCalculate',
   },
   {
     id: 'reset-button',
@@ -88,7 +88,7 @@ const getInstructionSteps = (configuration) => [
   { id: 'reading', title: 'STEP 4:', content: 'Observe line voltage VL, line current IL, W1 and W2. Click ADD to record the readings. Total measured power W = W1 + W2.' },
   { id: 'configuration', title: 'STEP 5:', content: 'Switch OFF the MCB and select the other configuration. To convert Star to Delta, keep all supply and meter wires, remove (17–19) and (19–21), then add (16–19), (18–21), (17–20). For Star, reverse these lamp links. Repeat CHECK, MCB ON and ADD.' },
   { id: 'brightness', title: 'OBSERVE:', content: 'Star lamps glow less brightly because each phase receives VL / √3. Delta lamps glow brighter because each phase receives VL.' },
-  { id: 'plot', title: 'STEP 6:', content: 'Click PLOT after recording both configurations to compare measured power, theoretical power and percentage error.' },
+  { id: 'calculations', title: 'STEP 6:', content: 'Click CALCULATE to open the calculations section. Select Star or Delta from the dropdown and click Calculate Load to calculate P = √3 × VL × IL with cosφ = 1. Recorded readings let you compare measured power and percentage error.' },
   { id: 'report', title: 'STEP 7:', content: 'Click Generate Report to review the observations, calculations and result. Use Print / Save as PDF in the report window.' },
   { id: 'finish', title: 'FINISH:', content: 'PRINT prints the simulation. RESET clears the wires and readings for a new experiment.' },
 ]
@@ -102,7 +102,7 @@ const ActionButtons = ({
   onAdd,
   onAiGuide,
   onCheck,
-  onPlot,
+  onCalculate,
   onPrint,
   onReset,
   onAutoConnect,
@@ -113,7 +113,7 @@ const ActionButtons = ({
   const handlers = {
     onAdd,
     onCheck,
-    onPlot,
+    onCalculate,
     onPrint,
     onReset,
     onAutoConnect,

@@ -175,12 +175,12 @@
     },
     {
       "id": 16,
-      "target": "#plot-button",
+      "target": "#calculate-button",
       "title": {
-        "en": "Plot"
+        "en": "Calculations"
       },
       "description": {
-        "en": "After adding both readings, plot the power comparison and measurement errors."
+        "en": "Open the calculations section, select Star or Delta, then calculate the load power. Recorded readings are filled in automatically so you can compare measured power and percentage error."
       },
       "placement": "right"
     },
@@ -191,7 +191,7 @@
         "en": "Generate Report"
       },
       "description": {
-        "en": "After plotting, generate the experiment report with observations, calculations, graph and result."
+        "en": "After recording both loads, generate the experiment report with observations, calculations, verification and result."
       },
       "placement": "right"
     },

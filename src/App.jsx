@@ -7,7 +7,7 @@ import ObservationTable from './components/ObservationTable.jsx'
 import FormulaSection from './components/FormulaSection.jsx'
 import HeaderBoard from './components/HeaderBoard.jsx'
 import ReportControls from './components/ReportControls.jsx'
-import ResultsGraphs from './components/ResultsGraphs.jsx'
+import CalculationSection from './components/CalculationSection.jsx'
 import SectionCard from './components/SectionCard.jsx'
 import WalkthroughStartButton from './walkthrough/components/WalkthroughStartButton.jsx'
 import { useLabAlerts } from './alerts/useLabAlerts.js'
@@ -25,7 +25,6 @@ const App = () => {
   const [powerOn, setPowerOn] = useState(false)
   const [connectionsVerified, setConnectionsVerified] = useState(false)
   const [observations, setObservations] = useState([])
-  const [graphGenerated, setGraphGenerated] = useState(false)
   const [reportGenerated, setReportGenerated] = useState(false)
   const [guidePlaying, setGuidePlaying] = useState(false)
   const [wiringReady, setWiringReady] = useState(false)
@@ -39,7 +38,7 @@ const App = () => {
   const nextConnection = wiringProgress.missingConnections[0]
   const activeStep = !connectionsVerified ? (wiringProgress.isCorrect ? 'check' : 'connections')
     : !powerOn ? 'mcb' : !alreadyRecorded ? 'reading'
-      : !bothRecorded ? 'configuration' : !graphGenerated ? 'plot' : !reportGenerated ? 'report' : 'finish'
+      : !bothRecorded ? 'configuration' : !reportGenerated ? 'calculations' : 'finish'
   const guideText = !connectionsVerified
     ? wiringProgress.wrongConnections.length
       ? 'Remove the incorrect connections by clicking their terminal numbers, then click CHECK.'
@@ -48,8 +47,8 @@ const App = () => {
     : !powerOn ? 'Turn on the MCB.'
       : !alreadyRecorded ? 'Observe line voltage, line current, W1 and W2. Click ADD to record the readings.'
         : !bothRecorded ? 'Turn off the MCB, select the other load configuration, change the lamp links and click CHECK.'
-          : !graphGenerated ? 'Click PLOT to compare the measured and theoretical power.'
-            : 'Generate the report to review both configurations.'
+          : !reportGenerated ? 'Click CALCULATE, select Star or Delta, and calculate power to verify the readings. Then generate the report.'
+            : 'Report generated. Review the calculations for both configurations.'
 
   useEffect(() => {
     const resize = () => setScale(getScale())
@@ -132,9 +131,8 @@ const App = () => {
       return
     }
     setObservations((rows) => [...rows, createObservation(configuration, rows.length + 1)])
-    setGraphGenerated(false)
     setReportGenerated(false)
-    notify('Reading Added', `${configuration} readings added: W1 + W2 = ${readings.w1 + readings.w2} W. ${observations.length === 0 ? 'Switch OFF the MCB and repeat for the other configuration.' : 'Both readings are ready. Click PLOT to compare the results.'}`, 'success')
+    notify('Reading Added', `${configuration} readings added: W1 + W2 = ${readings.w1 + readings.w2} W. ${observations.length === 0 ? 'Switch OFF the MCB and repeat for the other configuration.' : 'Both readings are ready. Click CALCULATE to verify the results.'}`, 'success')
   }
 
   const reset = () => {
@@ -146,23 +144,19 @@ const App = () => {
     setConnectionsVerified(false)
     setWiringProgress(validateConnections([], 'Star'))
     setObservations([])
-    setGraphGenerated(false)
     setReportGenerated(false)
     setSessionStart(Date.now())
     setStatus('Simulation reset. Make the Star connections and click CHECK.')
   }
 
-  const plot = () => {
-    if (!bothRecorded) {
-      notify('Record Both Configurations', 'Add one Star reading and one Delta reading before plotting.', 'warning')
-      return
-    }
-    setGraphGenerated(true)
-    setStatus('Power comparison and measurement error graphs plotted.')
+  const openCalculations = () => {
+    document.getElementById('calculations-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    document.getElementById('calculation-load')?.focus({ preventScroll: true })
+    setStatus('Select Star or Delta in CALCULATIONS, then calculate the load power to verify the readings.')
   }
 
   const report = () => {
-    if (!bothRecorded || !graphGenerated) return
+    if (!bothRecorded) return
     const opened = generateExperimentReport({ observations, sessionStart })
     setReportGenerated(opened)
     if (!opened) notify('Report Window Blocked', 'Allow pop-ups for this page, then click Generate Report again.', 'warning')
@@ -183,7 +177,7 @@ const App = () => {
                     activeInstructionStepId={activeStep} activeButtons={{ onAiGuide: guidePlaying }}
                     disabledButtons={{ onAdd: !powerOn || !connectionsVerified, onAutoConnect: !wiringReady || powerOn,
                       onCheck: !wiringReady || powerOn, onAiGuide: !wiringReady }}
-                    onAdd={recordObservation} onCheck={handleCheck} onPlot={plot}
+                    onAdd={recordObservation} onCheck={handleCheck} onCalculate={openCalculations}
                     onPrint={() => window.print()} onReset={reset}
                     onAiGuide={() => setGuidePlaying((playing) => !playing)}
                     onAutoConnect={() => {
@@ -201,7 +195,7 @@ const App = () => {
                   </SectionCard>
                   <ObservationTable observations={observations} />
                   <FormulaSection observations={observations} />
-                  <ReportControls graphGenerated={graphGenerated} minReadings={2} onGenerateReport={report}
+                  <ReportControls minReadings={2} onGenerateReport={report}
                     readingCount={observations.length} reportGenerated={reportGenerated} />
                 </aside>
                 <section className="right-panel">
@@ -212,7 +206,7 @@ const App = () => {
                 </section>
               </section>
             </main>
-            <ResultsGraphs observations={observations} plotted={graphGenerated} />
+            <CalculationSection key={sessionStart} observations={observations} />
             <footer className="simulation-footer">&copy; 2026 Virtual Labs IIT Roorkee</footer>
           </div>
         </div>
