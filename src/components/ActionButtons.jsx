@@ -8,7 +8,6 @@ import {
   ButtonIcon,
   CheckIcon,
   CloseIcon,
-  FormulaIcon,
   PrintIcon,
   ResetIcon,
 } from './Icons.jsx'
@@ -50,13 +49,6 @@ const buttons = [
     handlerName: 'onAdd',
   },
   {
-    id: 'calculate-button',
-    label: 'CALCULATE',
-    tone: 'action-button--orange',
-    Icon: FormulaIcon,
-    handlerName: 'onCalculate',
-  },
-  {
     id: 'reset-button',
     label: 'RESET',
     tone: 'action-button--red',
@@ -83,13 +75,13 @@ const getInstructionSteps = (configuration) => [
     })),
   },
   { id: 'note', title: 'NOTE:', content: 'With the MCB OFF, click a terminal number to remove all wires at that node. Reconnect any required wires that were removed.' },
-  { id: 'check', title: 'STEP 2:', content: 'Click CHECK. If Invalid Connections appears, correct the listed wires and check again. Proceed when Right Connections appears.' },
+  { id: 'check', title: 'STEP 2:', content: 'For manual wiring, click CHECK. If Invalid Connections appears, correct the listed wires and check again. AUTO CONNECT connects and verifies the wiring automatically. Once verified, CHECK is disabled and you can switch ON the MCB.' },
   { id: 'mcb', title: 'STEP 3:', content: 'Switch ON the MCB after the connections have been verified.' },
   { id: 'reading', title: 'STEP 4:', content: 'Observe line voltage VL, line current IL, W1 and W2. Click ADD to record the readings. Total measured power W = W1 + W2.' },
   { id: 'configuration', title: 'STEP 5:', content: 'Switch OFF the MCB and select the other configuration. To convert Star to Delta, keep all supply and meter wires, remove (17–19) and (19–21), then add (16–19), (18–21), (17–20). For Star, reverse these lamp links. Repeat CHECK, MCB ON and ADD.' },
   { id: 'brightness', title: 'OBSERVE:', content: 'Star lamps glow less brightly because each phase receives VL / √3. Delta lamps glow brighter because each phase receives VL.' },
-  { id: 'calculations', title: 'STEP 6:', content: 'Click CALCULATE to open the calculations section. Select Star or Delta from the dropdown and click Calculate Load to calculate P = √3 × VL × IL with cosφ = 1. Recorded readings let you compare measured power and percentage error.' },
-  { id: 'report', title: 'STEP 7:', content: 'Click Generate Report to review the observations, calculations and result. Use Print / Save as PDF in the report window.' },
+  { id: 'calculations', title: 'STEP 6:', content: 'Theoretical verification enables automatically after recording both Star and Delta loads. Select Star or Delta, manually enter VL and IL from the observation table, and calculate P = √3 × VL × IL with cosφ = 1. Enter your calculated P and click Verify for each load.' },
+  { id: 'report', title: 'STEP 7:', content: 'After both loads are verified, click Generate Report to review the observations, your calculated results, attempts and conclusion. Use Print / Save as PDF in the report window.' },
   { id: 'finish', title: 'FINISH:', content: 'PRINT prints the simulation. RESET clears the wires and readings for a new experiment.' },
 ]
 
@@ -102,7 +94,7 @@ const ActionButtons = ({
   onAdd,
   onAiGuide,
   onCheck,
-  onCalculate,
+  onInstructionsOpen,
   onPrint,
   onReset,
   onAutoConnect,
@@ -113,7 +105,6 @@ const ActionButtons = ({
   const handlers = {
     onAdd,
     onCheck,
-    onCalculate,
     onPrint,
     onReset,
     onAutoConnect,
@@ -142,7 +133,10 @@ const ActionButtons = ({
             ? {
                 'aria-controls': 'experiment-instructions-panel',
                 'aria-expanded': instructionsOpen,
-                onClick: () => setInstructionsOpen((current) => !current),
+                onClick: () => {
+                  setInstructionsOpen(!instructionsOpen)
+                  if (!instructionsOpen) onInstructionsOpen?.()
+                },
               }
             : {
                 'aria-pressed': handlerName === 'onAiGuide' ? isActive : undefined,

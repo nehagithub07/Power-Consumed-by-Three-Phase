@@ -23,7 +23,9 @@ const TOP_RIGHT_LIMIT = 3
 const DEDUPE_WINDOW = 900
 const ALERT_TYPES = ['success', 'warning', 'error', 'info']
 
-const getPlacement = () => 'center'
+const getPlacement = ({ critical, placement, requiresConfirmation }) => (
+  !critical && !requiresConfirmation && placement === 'top-right' ? 'top-right' : 'center'
+)
 
 const initialAlertState = {
   centerAlert: null,
@@ -87,6 +89,12 @@ const alertReducer = (state, action) => {
           action.alert,
           ...state.queue.filter((alert) => alert.placement !== 'center'),
         ],
+      })
+    case 'replace-top-right':
+      return pumpAlertQueue({
+        ...state,
+        topRightAlerts: [action.alert],
+        queue: state.queue.filter((alert) => alert.placement !== 'top-right'),
       })
     default:
       return state
@@ -156,6 +164,7 @@ const LabAlertProvider = ({ children }) => {
     }
 
     const replacesCenterAlert = nextAlert.placement === 'center' && nextAlert.replaceCurrent !== false
+    const replacesTopRightAlerts = nextAlert.placement === 'top-right' && nextAlert.replaceCurrent === true
 
     if (replacesCenterAlert) {
       const currentState = alertStateRef.current
@@ -166,9 +175,17 @@ const LabAlertProvider = ({ children }) => {
         .forEach(releaseDedupeKey)
     }
 
+    if (replacesTopRightAlerts) {
+      const currentState = alertStateRef.current
+      currentState.topRightAlerts.forEach(releaseDedupeKey)
+      currentState.queue
+        .filter((queuedAlert) => queuedAlert.placement === 'top-right')
+        .forEach(releaseDedupeKey)
+    }
+
     dispatchAlert({
       alert: nextAlert,
-      type: replacesCenterAlert ? 'replace-center' : 'enqueue',
+      type: replacesCenterAlert ? 'replace-center' : replacesTopRightAlerts ? 'replace-top-right' : 'enqueue',
     })
 
     return nextAlert.id
@@ -242,7 +259,7 @@ const LabAlertProvider = ({ children }) => {
           aria-live={centerAlert.type === 'error' || centerAlert.type === 'warning' ? 'assertive' : 'polite'}
           className="lab-alert-region lab-alert-region--center"
         >
-          <LabAlertCard alert={centerAlert} onDismiss={dismissAlert} />
+          <LabAlertCard alert={centerAlert} key={centerAlert.id} onDismiss={dismissAlert} />
         </div>
       ) : null}
     </LabAlertContext.Provider>

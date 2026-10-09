@@ -15,7 +15,7 @@
         "en": "Aim"
       },
       "description": {
-        "en": "Measure the power consumed by a three-phase resistive load using the two-wattmeter method for Star and Delta connections."
+        "en": "The aim of the experiment is to study and measure the power consumed by a three-phase resistive load using the two-wattmeter method."
       },
       "placement": "right"
     },
@@ -23,114 +23,125 @@
       "id": 2,
       "target": "#instruction-button",
       "title": {
-        "en": "Instructions"
+        "en": "Instructions Button"
       },
       "description": {
-        "en": "Read the connection sequence and procedure for the selected load configuration."
+        "en": "The Instructions provide step-by-step guidance on how to perform the simulation."
       },
       "placement": "right"
     },
     {
       "id": 3,
-      "target": "#load-configuration-panel",
+      "target": "#ai-guide-button",
       "title": {
-        "en": "Star / Delta"
+        "en": "AI Guide Button"
       },
       "description": {
-        "en": "Choose the load configuration with the MCB off. When converting Star to Delta, keep the supply and meter wires. Replace (17–19), (19–21) with (16–19), (18–21), (17–20)."
+        "en": "The AI guide will assist you in performing the simulation accurately at each step."
       },
       "placement": "right"
     },
     {
       "id": 4,
-      "target": "#ai-guide-button",
+      "target": "#check-button",
       "title": {
-        "en": "AI Guide"
+        "en": "Check Button"
       },
       "description": {
-        "en": "Get spoken guidance and highlighted terminals for the next required connection. Click again to stop."
+        "en": "The **CHECK** button verifies all the connections to ensure that they are correct.\n\n**Note:** If a wire is connected incorrectly, click the corresponding label number to remove the connection."
       },
       "placement": "right"
     },
     {
       "id": 5,
-      "target": "#check-button",
+      "target": "#auto-connect-button",
       "title": {
-        "en": "Check"
+        "en": "Auto Connect Button"
       },
       "description": {
-        "en": "Verify the selected circuit. Correct any Invalid Connections before proceeding after Right Connections."
+        "en": "The **AUTO CONNECT** button makes all the connections automatically."
       },
       "placement": "right"
     },
     {
       "id": 6,
-      "target": "#auto-connect-button",
+      "target": "#add-reading-button",
       "title": {
-        "en": "Auto Connect"
+        "en": "Add Button"
       },
       "description": {
-        "en": "Make the selected load connections automatically, then click CHECK."
+        "en": "The **ADD** button adds the readings to the observation table."
       },
       "placement": "right"
     },
     {
       "id": 7,
-      "target": "#power-supply",
+      "target": "#reset-button",
       "title": {
-        "en": "MCB"
+        "en": "Reset Button"
       },
       "description": {
-        "en": "After verification, switch on the MCB to energize the three-phase load. Switch it off before editing wires or changing configuration. Terminals: 1, 2, 3."
+        "en": "The **RESET** button refreshes the simulation to its initial state for a fresh start."
       },
       "placement": "right"
     },
     {
       "id": 8,
-      "target": "#voltmeter-meter",
+      "target": "#print-button",
       "title": {
-        "en": "Voltmeter"
+        "en": "Print Button"
       },
       "description": {
-        "en": "Measure line voltage VL between two phases. Terminals: 4, 5. The experiment uses 408 V."
+        "en": "The **PRINT** button allows you to print the simulation."
       },
       "placement": "right"
     },
     {
       "id": 9,
-      "target": "#ammeter-meter",
+      "target": "#power-supply",
       "title": {
-        "en": "Ammeter"
+        "en": "MCB"
       },
       "description": {
-        "en": "Measure line current IL. Terminals: 6, 7. Star reads 0.5 A and Delta reads 1.2 A."
+        "en": "The MCB acts as the main power switch for the experiment. It also protects the circuit by automatically disconnecting the power supply in case of an overload or short circuit. When turned ON, it supplies electrical power to the circuit.\n\n**Rating:** 16A, 3P, 415V AC, 50 Hz"
       },
       "placement": "right"
     },
     {
       "id": 10,
-      "target": "#wattmeter-1",
+      "target": "#voltmeter-meter",
       "title": {
-        "en": "Wattmeter W1"
+        "en": "AC Voltmeter"
       },
       "description": {
-        "en": "The first wattmeter measures one part of the total three-phase power. Terminals: 8, 9, 10, 11."
+        "en": "This voltmeter is used to measure the line voltage (Vₗ). It is connected between the R and Y Phases of the three-phase supply to measure the voltage supplied to the load.\n\n**Rating:** 0 - 600 V"
       },
-      "placement": "top"
+      "placement": "right"
     },
     {
       "id": 11,
-      "target": "#wattmeter-2",
+      "target": "#ammeter-meter",
       "title": {
-        "en": "Wattmeter W2"
+        "en": "AC Ammeter"
       },
       "description": {
-        "en": "The second wattmeter completes the two-wattmeter measurement. Terminals: 12, 13, 14, 15. Total measured power is W1 + W2."
+        "en": "This ammeter is used to measure the load current (Iₗ) flowing through the load. It is connected in series with the phase of the circuit.\n\n**Rating:** 0 - 10 A"
+      },
+      "placement": "right"
+    },
+    {
+      "id": 12,
+      "target": "#wattmeter-1",
+      "title": {
+        "en": "AC Wattmeter"
+      },
+      "description": {
+        "en": "The two wattmeters are used to measure the total active power consumed by the three-phase balanced load. Its current coil is connected in series with the R and B phases, while its pressure coil is connected to the Y-phase. The total active power is given by the algebraic sum of the two wattmeter readings (P = W₁ + W₂).\n\n**Rating:** 0 - 600W"
       },
       "placement": "top"
     },
     {
-      "id": 12,
+      "id": 13,
       "target": "#lamp-load",
       "title": {
         "en": "Lamp Load"
@@ -141,24 +152,13 @@
       "placement": "right"
     },
     {
-      "id": 13,
-      "target": "#add-reading-button",
-      "title": {
-        "en": "Add Reading"
-      },
-      "description": {
-        "en": "Record VL, IL, W1, W2 and their total. Record one reading for each configuration."
-      },
-      "placement": "right"
-    },
-    {
       "id": 14,
       "target": "#observation-table-panel",
       "title": {
         "en": "Observation Table"
       },
       "description": {
-        "en": "Compare the Star and Delta readings. Star total power is 370 W; Delta total power is 840 W."
+        "en": "This table records the measured line voltage (Vₗ), line current (Iₗ), and Power (W₁ and W₂) for Star and Delta Load."
       },
       "placement": "right"
     },
@@ -166,23 +166,23 @@
       "id": 15,
       "target": "#formula-section-panel",
       "title": {
-        "en": "Formulas"
+        "en": "Equations"
       },
       "description": {
-        "en": "For the resistive load, cosφ = 1 and theoretical power P = √3 × VL × IL. Compare W1 + W2 with P to calculate percentage error."
+        "en": "This section displays an equation used to calculate the theoretical three-phase active power for Star and Delta connection Load."
       },
       "placement": "right"
     },
     {
       "id": 16,
-      "target": "#calculate-button",
+      "target": "#calculations-panel",
       "title": {
-        "en": "Calculations"
+        "en": "Theoretical Verification"
       },
       "description": {
-        "en": "Open the calculations section, select Star or Delta, then calculate the load power. Recorded readings are filled in automatically so you can compare measured power and percentage error."
+        "en": "This is the theoretical verification panel. For verification, you have to calculate power for both connections. Enter the required values and compare the calculated power with the measured power to verify them."
       },
-      "placement": "right"
+      "placement": "top"
     },
     {
       "id": 17,
@@ -191,29 +191,7 @@
         "en": "Generate Report"
       },
       "description": {
-        "en": "After recording both loads, generate the experiment report with observations, calculations, verification and result."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 18,
-      "target": "#reset-button",
-      "title": {
-        "en": "Reset"
-      },
-      "description": {
-        "en": "Clear connections and readings and return to the initial Star setup."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 19,
-      "target": "#print-button",
-      "title": {
-        "en": "Print"
-      },
-      "description": {
-        "en": "Print the simulation using the browser print dialog."
+        "en": "The Report button generates a summarised report of the simulation. After completing the observation table and theoretical verification, generate the report. The report will include the time taken to complete the simulation, no. of attempts, the apparatus used, recorded readings, the user-calculated result, and the conclusion."
       },
       "placement": "right"
     }

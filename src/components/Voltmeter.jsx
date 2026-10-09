@@ -10,8 +10,8 @@ const Voltmeter = ({ value = 0 }) => {
     <article className="lab-meter lab-meter--image lab-meter--voltmeter" id="voltmeter-meter" aria-label={`Line voltmeter: ${value} V`}>
       <span className="lab-meter__image-frame"><img alt="Voltmeter" className="lab-meter__image" src={voltmeterImg} /></span>
       <MeterNeedle className="meter-needle--voltmeter" rotation={meterDisplay.rotation} />
-      <ApparatusTerminal number={4} owner="Voltmeter" polarity="plus" variant="voltmeter" x="23%" y="81%" labelY="104%" />
-      <ApparatusTerminal number={5} owner="Voltmeter" polarity="minus" variant="voltmeter" x="75%" y="81%" labelY="104%" />
+      <ApparatusTerminal number={4} owner="Voltmeter" polarity="plus" variant="voltmeter" x="22.71%" y="78.6%" labelY="104%" />
+      <ApparatusTerminal number={5} owner="Voltmeter" polarity="minus" variant="voltmeter" x="73.39%" y="78.6%" labelY="104%" />
     </article>
   )
 }

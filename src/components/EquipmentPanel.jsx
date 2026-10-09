@@ -14,9 +14,6 @@ const EquipmentPanel = ({ configuration, onTogglePower, powerOn, readings }) => 
       <Wattmeter number={2} value={readings.w2} />
     </div>
     <LampLoad configuration={configuration} powerOn={powerOn} />
-    <p className="equipment-panel__hint">
-      Drag between terminals to connect. With the MCB off, click a number to remove its wires.
-    </p>
   </section>
 )
 export default EquipmentPanel

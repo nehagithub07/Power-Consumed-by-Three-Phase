@@ -3,6 +3,9 @@ import lampDimImg from '../assets/lampdim.png'
 import lampBrightImg from '../assets/lampbright.png'
 import ApparatusTerminal from './ApparatusTerminal.jsx'
 
+// Socket centers in the lamp images; the three rows are not evenly spaced.
+const terminalRows = ['33.35%', '55.3%', '76.5%']
+
 const LampLoad = ({ configuration, powerOn }) => {
   const brightness = powerOn ? (configuration === 'Star' ? 'dim' : 'bright') : 'off'
   const image = powerOn ? (configuration === 'Star' ? lampDimImg : lampBrightImg) : lampOffImg
@@ -12,10 +15,9 @@ const LampLoad = ({ configuration, powerOn }) => {
       {[16, 17, 18, 19, 20, 21].map((number, index) => (
         <ApparatusTerminal key={number} number={number} owner="Lamp load" variant="lamp-load"
           polarity={index % 2 === 0 ? 'plus' : 'minus'}
-          x={index % 2 === 0 ? '13%' : '86.8%'} y={`${33.4 + Math.floor(index / 2) * 21.7}%`}
+          x={index % 2 === 0 ? '12.95%' : '86.6%'} y={terminalRows[Math.floor(index / 2)]}
           labelX={index % 2 === 0 ? '4%' : '95.5%'} />
       ))}
-      <p className="lamp-load__caption">{configuration} connection · {powerOn ? (configuration === 'Star' ? 'Lower brightness' : 'Higher brightness') : 'Lamps off'}</p>
     </article>
   )
 }

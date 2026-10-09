@@ -5,6 +5,7 @@ import { autoConnectCircuit, readConnectionPairs, validateCircuit } from '../src
 import { getMeterNeedleRotation } from '../src/utils/meterNeedle.js'
 import { voltmeterNeedleRotation, ammeterNeedleRotation, wattmeterNeedleRotation } from '../src/config/meterNeedleRotations.js'
 import { generateExperimentReport } from '../src/utils/reportGenerator.js'
+import { createVerificationState, submitVerification, unlockVerification, updateVerificationEntry } from '../src/utils/manualVerification.js'
 
 test('meter needles interpolate the experimental readings and clamp to their printed scales', () => {
   assert.ok(Math.abs(getMeterNeedleRotation(408, voltmeterNeedleRotation) - 32.4) < 0.001)
@@ -81,7 +82,7 @@ test('Auto Connect removes bad and duplicate wires, then converts both ways with
   assert.equal(validateCircuit(circuit, 'Star').isCorrect, true)
 })
 
-test('the printable report contains both observations and computed verification', async () => {
+test('reports require both verifications and include manual results, attempts, apparatus and conclusion', async () => {
   const previousWindow = globalThis.window
   let reportUrl
   globalThis.window = {
@@ -89,16 +90,33 @@ test('the printable report contains both observations and computed verification'
     setTimeout: () => {},
   }
   try {
+    const observations = [createObservation('Star', 1), createObservation('Delta', 2)]
+    let verification = createVerificationState()
+    assert.equal(generateExperimentReport({ observations, sessionStart: Date.now(), verification }), false)
+    assert.equal(reportUrl, undefined)
+    verification = unlockVerification(verification, observations)
+    verification = submitVerification(verification, 'Star', observations)
+    for (const [configuration, current, power] of [['Star', '0.5', '353.32'], ['Delta', '1.2', '847.98']]) {
+      for (const [field, value] of Object.entries({ lineVoltage: '408', lineCurrent: current, power })) {
+        verification = updateVerificationEntry(verification, configuration, field, value)
+      }
+      verification = submitVerification(verification, configuration, observations)
+    }
     assert.equal(generateExperimentReport({
-      observations: [createObservation('Star', 1), createObservation('Delta', 2)], sessionStart: Date.now(),
+      observations, sessionStart: Date.now() - 95000, verification, connectionAttempts: 2,
     }), true)
     const html = await (await fetch(reportUrl)).text()
-    for (const value of ['Star', 'Delta', '370', '840', '353.34', '848.01', '4.72%', '0.94%', 'Print / Save as PDF']) {
+    for (const value of ['Star', 'Delta', '370', '840', '353.32', '847.98', 'Verification attempts: 3',
+      'Duration: 1 min 35 sec', 'User-calculated Results', 'Conclusion', '<strong>Rating:</strong>',
+      'V<sub>L</sub>', 'W<sub>1</sub>', '16A, 3P, 415V AC, 50 Hz', 'Print / Save as PDF']) {
       assert.ok(html.includes(value), `Report is missing ${value}`)
     }
+    assert.ok(!html.includes('353.34') && !html.includes('848.01'), 'Report must use user-entered power')
     assert.ok(!/transformer|efficiency|voltage regulation/i.test(html))
+    const edited = updateVerificationEntry(verification, 'Star', 'power', '353.34')
+    assert.equal(generateExperimentReport({ observations, sessionStart: Date.now(), verification: edited }), false)
     globalThis.window.open = () => null
-    assert.equal(generateExperimentReport({ observations: [], sessionStart: Date.now() }), false)
+    assert.equal(generateExperimentReport({ observations, sessionStart: Date.now(), verification }), false)
   } finally {
     if (reportUrl) URL.revokeObjectURL(reportUrl)
     if (previousWindow === undefined) delete globalThis.window
