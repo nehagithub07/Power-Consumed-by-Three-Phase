@@ -18,12 +18,12 @@ const ReportControls = ({
       disabled={!reportReady}
       title={!readingsReady ? 'Record both Star and Delta observations first.'
         : !reportReady ? 'Complete theoretical verification for both Star Load Connection and Delta Load Connection first.' : 'Generate the experiment report.'}
-      aria-label="Generate Report"
+      aria-label="GENERATE REPORT"
       data-report-generated={reportGenerated ? 'true' : 'false'}
       onClick={reportReady ? onGenerateReport : undefined}
     >
       <PdfIcon />
-      <span>Generate Report</span>
+      <span>GENERATE REPORT</span>
     </button>
   )
 }

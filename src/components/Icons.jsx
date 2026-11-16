@@ -104,6 +104,14 @@ export const FormulaIcon = () => (
   </svg>
 )
 
+export const PercentIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="9" r="4" />
+    <path d="M7 26 25 6" />
+    <circle cx="23" cy="23" r="4" />
+  </svg>
+)
+
 export const ActionButtonsIcon = () => (
   <svg aria-hidden="true" viewBox="0 0 32 32">
     <circle cx="14.7" cy="8.7" fill="currentColor" r="6.7" />

@@ -14,6 +14,7 @@ const LampLoad = ({ configuration, powerOn }) => {
       <img alt={`Three-phase lamp load, lamps ${brightness}`} className="lamp-load__image" src={image} />
       {[16, 17, 18, 19, 20, 21].map((number, index) => (
         <ApparatusTerminal key={number} number={number} owner="Lamp load" variant="lamp-load"
+          color={index % 2 === 0 ? ['red', 'yellow', 'blue'][Math.floor(index / 2)] : 'black'}
           polarity={index % 2 === 0 ? 'plus' : 'minus'}
           x={index % 2 === 0 ? '12.95%' : '86.6%'} y={terminalRows[Math.floor(index / 2)]}
           labelX={index % 2 === 0 ? '4%' : '95.5%'} />

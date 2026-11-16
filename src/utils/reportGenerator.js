@@ -11,7 +11,15 @@ export const generateExperimentReport = ({ observations, sessionStart, verificat
   const rows = observations.map((row) => `<tr><td>${row.id}</td><td>${escapeHtml(row.configuration)}</td><td>${row.lineVoltage}</td><td>${row.lineCurrent}</td><td>${row.w1}</td><td>${row.w2}</td><td><strong>${row.measuredPower}</strong></td></tr>`).join('')
   const resultRows = observations.map((row) => {
     const entry = verification.entries[row.configuration]
-    return `<tr><td>${escapeHtml(row.configuration)}</td><td>${escapeHtml(entry.lineVoltage)}</td><td>${escapeHtml(entry.lineCurrent)}</td><td>${Number(entry.power).toFixed(2)}</td><td>${entry.attempts}</td><td>Verified</td></tr>`
+    return `<tr><td>${escapeHtml(row.configuration)}</td><td>${escapeHtml(entry.lineVoltage)}</td><td>${escapeHtml(entry.lineCurrent)}</td><td>${escapeHtml(entry.cosPhi)}</td><td>${Number(entry.power).toFixed(2)}</td><td>${entry.attempts}</td><td>Verified</td></tr>`
+  }).join('')
+  const errorRows = observations.map((row) => {
+    const entry = verification.entries[row.configuration]
+    const entered = (value) => String(value ?? '').trim() ? escapeHtml(value) : 'Not entered'
+    const calculated = entry.percentageError != null && entry.errorDenominator != null
+    const difference = calculated ? Number(entry.absoluteDifference).toFixed(2) : 'Not calculated'
+    const percentageError = calculated ? `${entry.percentageError.toFixed(2)}%` : 'Not calculated'
+    return `<tr><td>${escapeHtml(row.configuration)}</td><td>${entered(entry.errorMeasuredPower)}</td><td>${entered(entry.errorTruePower)}</td><td>${entered(entry.errorDenominator)}</td><td>${difference}</td><td>${percentageError}</td></tr>`
   }).join('')
   const attempts = Object.values(verification.entries).reduce((total, entry) => total + entry.attempts, 0)
   const elapsedSeconds = Math.max(0, Math.round((Date.now() - sessionStart) / 1000))
@@ -40,7 +48,8 @@ export const generateExperimentReport = ({ observations, sessionStart, verificat
     </ul>
     <h2>Observation Table</h2><table><thead><tr><th>S. No.</th><th>Load</th><th>V<sub>L</sub> (V)</th><th>I<sub>L</sub> (A)</th><th>W<sub>1</sub> (W)</th><th>W<sub>2</sub> (W)</th><th>W<sub>1</sub> + W<sub>2</sub> (W)</th></tr></thead><tbody>${rows}</tbody></table>
     <h2>Theoretical Verification</h2><p>P = √3 × V<sub>L</sub> × I<sub>L</sub> × cosφ. For a resistive load, cosφ = 1. The values below were entered and verified by the user.</p>
-    <h2>User-calculated Results</h2><table><thead><tr><th>Load</th><th>Entered V<sub>L</sub> (V)</th><th>Entered I<sub>L</sub> (A)</th><th>User-calculated P (W)</th><th>Attempts</th><th>Status</th></tr></thead><tbody>${resultRows}</tbody></table>
+    <h2>User-calculated Results</h2><table><thead><tr><th>Load</th><th>Entered V<sub>L</sub> (V)</th><th>Entered I<sub>L</sub> (A)</th><th>Entered cos φ</th><th>User-calculated P (W)</th><th>Attempts</th><th>Status</th></tr></thead><tbody>${resultRows}</tbody></table>
+    <h2>Error Analysis</h2><p>% Error = |Measured Value − True Value| / True Value × 100. True Value = Theoretical Value. The user manually enters the measured value and true value in the numerator and the true value in the denominator. Absolute differences and percentages are calculated after clicking Calculate Error.</p><table><thead><tr><th>Load</th><th>Entered measured value (W)</th><th>Entered true value in numerator (W)</th><th>Entered true value in denominator (W)</th><th>Absolute difference (W)</th><th>Percentage error</th></tr></thead><tbody>${errorRows}</tbody></table>
     <h2>Conclusion</h2><p>The manually calculated power values for both Star and Delta loads were verified. Total measured power is the sum of the two wattmeter readings, W<sub>1</sub> + W<sub>2</sub>. The Delta-connected load consumes more power and its lamps glow brighter. The Star-connected load consumes less power and its lamps glow less brightly. Phase voltage is V<sub>L</sub> / √3 in Star and V<sub>L</sub> in Delta.</p>
     </main></body></html>`
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }))

@@ -8,6 +8,7 @@ const PowerSupply = ({ onTogglePower, powerOn }) => (
     <div className="mcb-device__terminal-strip">
       {[1, 2, 3].map((number) => (
         <ApparatusTerminal key={number} number={number} owner="MCB" polarity={number === 1 ? 'plus' : 'minus'}
+          color={['red', 'yellow', 'blue'][number - 1]}
           variant="mcb" x={`${20 + (number - 1) * 30}%`} y="45%" labelY="calc(100% + 16px)" />
       ))}
     </div>

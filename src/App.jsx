@@ -16,7 +16,7 @@ import { generateExperimentReport } from './utils/reportGenerator.js'
 import { LOAD_CONFIGURATIONS, createObservation, getReadings, validateConnections } from './utils/threePhaseExperiment.js'
 import {
   createVerificationState, hasBothObservations, isReportReady, isVerificationComplete,
-  submitVerification, unlockVerification, updateVerificationEntry,
+  submitErrorAnalysis, submitVerification, unlockVerification, updateErrorAnalysisEntry, updateVerificationEntry,
 } from './utils/manualVerification.js'
 
 const BASE_WIDTH = 1440
@@ -53,8 +53,8 @@ const App = () => {
         : !powerOn ? 'mcb' : 'reading'
   const guideText = bothRecorded
     ? reportGenerated ? 'Report generated. Review the calculations for both configurations.'
-      : bothVerified ? 'Both load calculations are verified. Click Generate Report to review your results.'
-        : 'Theoretical verification is enabled. Manually enter the voltage, current and calculated power for each load, then click Verify.'
+      : bothVerified ? 'Both load powers are calculated. Enter the measured value and both true values in each error formula, click Calculate Error, then generate the report.'
+        : 'Theoretical verification is enabled. Manually enter the voltage, current, cos φ and calculated power for each load, then click Calculate.'
     : alreadyRecorded
       ? `${powerOn ? 'Turn off the MCB, then select' : 'Select'} the other load configuration, change the lamp links and click CHECK or AUTO CONNECT.`
       : !connectionsVerified
@@ -156,7 +156,7 @@ const App = () => {
     if (powerOn) {
       setPowerOn(false)
       notify('MCB Switched OFF', bothRecorded
-        ? 'Both observations are recorded. Verify both loads in the theoretical verification section, then generate the report.'
+        ? 'Both observations are recorded. Click Calculate for each load in the theoretical verification section, then calculate the percentage errors and generate the report.'
         : alreadyRecorded ? 'Select the other load configuration, update the lamp links, then click CHECK or AUTO CONNECT.'
           : 'You can edit the wiring or change the load. Switch ON the MCB again to record this load’s readings.')
       return
@@ -175,7 +175,7 @@ const App = () => {
     if (!powerOn || !connectionsVerified) return
     if (alreadyRecorded) {
       notify('Reading Already Exists', bothRecorded
-        ? 'Both load observations are already recorded. Verify both loads in the theoretical verification section, then generate the report.'
+        ? 'Both load observations are already recorded. Click Calculate for each load in the theoretical verification section, then calculate the percentage errors and generate the report.'
         : `The ${configuration} reading is already recorded. Switch off the MCB and select the other configuration.`, 'warning')
       return
     }
@@ -183,7 +183,7 @@ const App = () => {
     setObservations(nextObservations)
     setVerification((current) => unlockVerification(current, nextObservations))
     setReportGenerated(false)
-    notify('Reading Added', `${configuration} readings added: W1 + W2 = ${readings.w1 + readings.w2} W. ${hasBothObservations(nextObservations) ? 'Theoretical verification is now enabled. Manually enter the voltage, current and calculated power for each load, then click Verify.' : 'Switch OFF the MCB and repeat for the other configuration.'}`, 'success')
+    notify('Reading Added', `${configuration} readings added: W1 + W2 = ${readings.w1 + readings.w2} W. ${hasBothObservations(nextObservations) ? 'Theoretical verification is now enabled. Manually enter the voltage, current, cos φ and calculated power for each load, then click Calculate.' : 'Switch OFF the MCB and repeat for the other configuration.'}`, 'success')
   }
 
   const reset = () => {
@@ -214,7 +214,7 @@ const App = () => {
     setReportGenerated(false)
   }
 
-  const verifyCalculation = (load) => {
+  const calculatePower = (load) => {
     const next = submitVerification(verification, load, observations)
     if (next === verification) {
       notify('Verification Locked', 'Add both Star and Delta observations to enable theoretical verification.', 'warning')
@@ -224,9 +224,22 @@ const App = () => {
     setReportGenerated(false)
     const result = next.entries[load].feedback
     const nextStep = isVerificationComplete(next)
-      ? ' Both loads are verified. You can now generate the report.'
-      : ` Select ${load === 'Star' ? 'Delta' : 'Star'} and verify its calculated power next.`
+      ? ' Both load powers are calculated. Enter the measured value and both true values in each error formula, then click Calculate Error.'
+      : ` Select ${load === 'Star' ? 'Delta' : 'Star'} and click Calculate for its power next.`
     notify(result.title, result.description + (result.verified ? nextStep : ''), result.type)
+  }
+
+  const updateErrorInput = (load, field, value) => {
+    setVerification((current) => updateErrorAnalysisEntry(current, load, field, value))
+    setReportGenerated(false)
+  }
+
+  const calculateErrors = () => {
+    const next = submitErrorAnalysis(verification, observations)
+    setVerification(next)
+    setReportGenerated(false)
+    const result = next.errorFeedback
+    notify(result.title, result.description, result.type)
   }
 
   const report = () => {
@@ -269,7 +282,6 @@ const App = () => {
                     onAdd={recordObservation} onCheck={() => handleCheck()}
                     onPrint={printSimulation} onReset={reset}
                     onAiGuide={toggleGuide}
-                    onInstructionsOpen={() => notify('Experiment Instructions', 'Follow the numbered steps in the instructions panel. The active step and next connection are highlighted as you work.')}
                     onAutoConnect={handleAutoConnect} />
                   <SectionCard icon="buttons" title="LOAD CONNECTION" id="load-configuration-panel">
                     <div className="load-configuration" role="group" aria-label="Load connection">
@@ -296,7 +308,8 @@ const App = () => {
               </section>
             </main>
             <CalculationSection key={sessionStart} observations={observations} verification={verification}
-              onChange={updateCalculation} onVerify={verifyCalculation} onNotify={notify} />
+              onChange={updateCalculation} onCalculate={calculatePower} onErrorChange={updateErrorInput}
+              onCalculateErrors={calculateErrors} onNotify={notify} />
             <footer className="simulation-footer">&copy; 2026 Virtual Labs IIT Roorkee</footer>
           </div>
         </div>

@@ -1,21 +1,23 @@
 import { CONNECTIONS, connectionKey, validateConnections } from './threePhaseExperiment.js'
+import { TERMINAL_COLORS } from '../config/terminalColors.js'
 
 const terminalIds = Array.from({ length: 21 }, (_, index) => `${index + 1}-endpoint`)
 const terminalNumber = (id) => Number(id.replace('-endpoint', ''))
 const connections = (instance) => instance?.getAllConnections() ?? []
 const connector = ['Bezier', { curviness: 48, margin: 0 }]
-const wireColors = {
-  plus: { stroke: '#b91c1c', outlineStroke: '#65100e', hoverStroke: '#dc2626' },
-  minus: { stroke: '#171717', outlineStroke: '#000000', hoverStroke: '#262626' },
-}
-
-const getWireStyles = (terminalId) => {
-  const polarity = globalThis.document?.querySelector(
+const getTerminalColor = (terminalId) => (
+  globalThis.document?.querySelector(
     `.connection-terminal[data-terminal-id="${terminalId}"]`,
-  )?.dataset.polarity ?? 'minus'
-  const colors = wireColors[polarity]
-  const paint = { stroke: colors.stroke, strokeWidth: 3.5, outlineStroke: colors.outlineStroke, outlineWidth: 0.6 }
-  return { paint, hoverPaint: { ...paint, stroke: colors.hoverStroke, strokeWidth: 4.5 } }
+  )?.dataset.terminalColor ?? 'black'
+)
+
+const getWireStyles = (sourceId, targetId) => {
+  const sourceColor = getTerminalColor(sourceId)
+  // A phase-colored socket determines the wire color when the other end is black.
+  const color = sourceColor === 'black' && targetId ? getTerminalColor(targetId) : sourceColor
+  const colors = TERMINAL_COLORS[color] ?? TERMINAL_COLORS.black
+  const paint = { stroke: colors.fill, strokeWidth: 3.5, outlineStroke: colors.dark, outlineWidth: 0.6 }
+  return { paint, hoverPaint: { ...paint, stroke: colors.bright, strokeWidth: 4.5 } }
 }
 
 export const resolveJsPlumb = (module) => module?.jsPlumb || module?.default?.jsPlumb || module?.default
@@ -70,7 +72,7 @@ export const addAllEndpoints = (instance) => {
 
 export const updateTerminalConnectionStates = (instance, container) => {
   connections(instance).forEach((connection) => {
-    const { paint, hoverPaint } = getWireStyles(connection.sourceId)
+    const { paint, hoverPaint } = getWireStyles(connection.sourceId, connection.targetId)
     connection.setPaintStyle(paint)
     connection.setHoverPaintStyle(hoverPaint)
   })
@@ -100,7 +102,7 @@ export const autoConnectCircuit = (instance, configuration) => {
   })
   required.forEach(([first, second]) => {
     if (kept.has(connectionKey(first, second))) return
-    const { paint, hoverPaint } = getWireStyles(`${first}-endpoint`)
+    const { paint, hoverPaint } = getWireStyles(`${first}-endpoint`, `${second}-endpoint`)
     instance.connect({
       uuids: [`${first}-endpoint`, `${second}-endpoint`],
       connector, paintStyle: paint, hoverPaintStyle: hoverPaint, fireEvent: false,

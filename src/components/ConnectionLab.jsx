@@ -18,10 +18,12 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
     let disposed = false
     let instance
     let observer
+    let colorObserver
     const lab = labRef.current
     const refresh = () => {
       if (disposed || !instance) return
       syncWireAnchors(lab, instance)
+      updateTerminalConnectionStates(instance, lab)
       instance.repaintEverything()
     }
     const changed = () => {
@@ -67,6 +69,8 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
         })
         observer = new ResizeObserver(refresh)
         observer.observe(lab)
+        colorObserver = new MutationObserver(refresh)
+        colorObserver.observe(lab, { attributes: true, attributeFilter: ['data-terminal-color'], subtree: true })
         lab.querySelectorAll('img').forEach((image) => image.addEventListener('load', refresh))
         refresh()
       })
@@ -74,6 +78,7 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
     return () => {
       disposed = true
       observer?.disconnect()
+      colorObserver?.disconnect()
       lab.removeEventListener('click', removeWire)
       lab.removeEventListener('keydown', removeWire)
       lab.querySelectorAll('img').forEach((image) => image.removeEventListener('load', refresh))
@@ -86,6 +91,7 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
   useEffect(() => {
     if (!instanceRef.current) return
     syncWireAnchors(labRef.current, instanceRef.current)
+    updateTerminalConnectionStates(instanceRef.current, labRef.current)
     instanceRef.current.repaintEverything()
   }, [scale])
 

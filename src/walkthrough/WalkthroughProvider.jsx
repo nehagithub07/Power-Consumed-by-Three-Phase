@@ -3,31 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import defaultWalkthroughConfig from './walkthroughConfig.json'
 import { WalkthroughContext } from './WalkthroughContext.js'
 import { loadWalkthroughConfig } from './walkthroughConfigLoader.js'
+import { getTargetRect } from './targetGeometry.js'
 import WalkthroughOverlay from './components/WalkthroughOverlay.jsx'
 import './walkthrough.css'
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-
-const getElementRect = (element) => {
-  if (!element) {
-    return null
-  }
-
-  const rect = element.getBoundingClientRect()
-
-  if (rect.width === 0 && rect.height === 0) {
-    return null
-  }
-
-  return {
-    bottom: rect.bottom,
-    height: rect.height,
-    left: rect.left,
-    right: rect.right,
-    top: rect.top,
-    width: rect.width,
-  }
-}
 
 const WalkthroughProvider = ({
   autoPlayAudio = false,
@@ -63,7 +43,7 @@ const WalkthroughProvider = ({
     }
 
     const target = document.querySelector(activeTargetSelector)
-    const nextRect = getElementRect(target)
+    const nextRect = getTargetRect(target)
 
     setTargetRect(nextRect)
 

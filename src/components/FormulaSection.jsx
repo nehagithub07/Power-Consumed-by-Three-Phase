@@ -1,8 +1,9 @@
 import SectionCard from './SectionCard.jsx'
+import { PercentIcon } from './Icons.jsx'
 
 const FormulaSection = () => {
   return (
-    <SectionCard className="formula-section-card" icon="formula" id="formula-section-panel" title="FORMULAS">
+    <SectionCard className="formula-section-card" icon="formula" id="formula-section-panel" title="EQUATIONS">
       <div className="formula-section">
         <div className="formula-grid">
           <article className="formula-tile formula-tile--theory">
@@ -16,11 +17,11 @@ const FormulaSection = () => {
             <div className="formula-phase-row"><span><b aria-hidden="true">Δ</b> Delta</span><span>V<sub>ph</sub> = V<sub>L</sub></span></div>
           </article>
           <article className="formula-tile formula-tile--error">
-            <h3>Error Analysis</h3>
+            <h3 className="formula-tile__heading"><PercentIcon />Error Analysis</h3>
             <p className="formula-equation formula-equation--error" aria-label="Percent error equals the absolute difference between Measured Value and True Value, divided by True Value, times 100">
-              <span aria-hidden="true">% Error = </span>
+              <span aria-hidden="true">% Error =</span>
               <span className="formula-fraction" aria-hidden="true"><span>|Measured Value − True Value|</span><span>True Value</span></span>
-              <span aria-hidden="true"> × 100</span>
+              <span aria-hidden="true">× 100</span>
             </p>
             <p className="formula-tile__note">True Value = Theoretical Value</p>
           </article>

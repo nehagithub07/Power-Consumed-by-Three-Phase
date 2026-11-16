@@ -114,7 +114,7 @@
         "en": "AC Voltmeter"
       },
       "description": {
-        "en": "This voltmeter is used to measure the line voltage (Vₗ). It is connected between the R and Y Phases of the three-phase supply to measure the voltage supplied to the load.\n\n**Rating:** 0 - 600 V"
+        "en": "This voltmeter is used to measure the line voltage (VL). It is connected between the R and Y Phases of the three-phase supply to measure the voltage supplied to the load.\n\n**Rating:** 0 - 600 V"
       },
       "placement": "right"
     },
@@ -125,7 +125,7 @@
         "en": "AC Ammeter"
       },
       "description": {
-        "en": "This ammeter is used to measure the load current (Iₗ) flowing through the load. It is connected in series with the phase of the circuit.\n\n**Rating:** 0 - 10 A"
+        "en": "This ammeter is used to measure the load current (IL) flowing through the load. It is connected in series with the phase of the circuit.\n\n**Rating:** 0 - 10 A"
       },
       "placement": "right"
     },
@@ -133,65 +133,87 @@
       "id": 12,
       "target": "#wattmeter-1",
       "title": {
-        "en": "AC Wattmeter"
+        "en": "AC Wattmeter (W1)"
       },
       "description": {
-        "en": "The two wattmeters are used to measure the total active power consumed by the three-phase balanced load. Its current coil is connected in series with the R and B phases, while its pressure coil is connected to the Y-phase. The total active power is given by the algebraic sum of the two wattmeter readings (P = W₁ + W₂).\n\n**Rating:** 0 - 600W"
+        "en": "The two wattmeters are used to measure the total active power consumed by the three-phase balanced load. Its current coil is connected in series with the R and B phases, while its pressure coil is connected to the Y-phase. The total active power is given by the algebraic sum of the two wattmeter readings (P = W1 + W2).\n\n**Rating:** 0 - 600 W"
       },
       "placement": "top"
     },
     {
-      "id": 13,
+      "target": "#wattmeter-2",
+      "title": {
+        "en": "AC Wattmeter (W2)"
+      },
+      "description": {
+        "en": "The two wattmeters are used to measure the total active power consumed by the three-phase balanced load. Its current coil is connected in series with the R and B phases, while its pressure coil is connected to the Y-phase. The total active power is given by the algebraic sum of the two wattmeter readings (P = W1 + W2).\n\n**Rating:** 0 - 600 W"
+      },
+      "placement": "left",
+      "id": 13
+    },
+    {
+      "target": "#load-configuration-panel",
+      "title": {
+        "en": "Load Connection"
+      },
+      "description": {
+        "en": "This section is used to select the connection configuration of the three-phase lamp load. It provides two options: Star (Y) and Delta (Δ). In Star connection, one end of each phase load is connected to a common neutral point, whereas in Delta connection, the three-phase loads are connected end-to-end to form a closed loop."
+      },
+      "placement": "right",
+      "id": 14
+    },
+    {
+      "id": 15,
       "target": "#lamp-load",
       "title": {
         "en": "Lamp Load"
       },
       "description": {
-        "en": "The three load branches have left terminals 16, 18, 20 and right terminals 17, 19, 21. Lamps are off until the verified MCB is on. Star glows dimly; Delta glows brightly."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 14,
-      "target": "#observation-table-panel",
-      "title": {
-        "en": "Observation Table"
-      },
-      "description": {
-        "en": "This table records the measured line voltage (Vₗ), line current (Iₗ), and Power (W₁ and W₂) for Star and Delta Load."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 15,
-      "target": "#formula-section-panel",
-      "title": {
-        "en": "Equations"
-      },
-      "description": {
-        "en": "This section displays an equation used to calculate the theoretical three-phase active power for Star and Delta connection Load."
+        "en": "The lamp load is used as a three-phase balanced resistive load to study power consumption using the Two-Wattmeter Method. It consists of three sets of lamps representing the R, Y, and B phases. The load can be configured in either Star (Y) or Delta (Δ) connection to observe the variation in line voltage, line current, and power consumption.\n\n**Rating:** 150 W per lamp"
       },
       "placement": "right"
     },
     {
       "id": 16,
+      "target": "#observation-table-panel",
+      "title": {
+        "en": "Observation Table"
+      },
+      "description": {
+        "en": "This table records the measured line voltage (VL), line current (IL), and Power (W1 and W2) for Star and Delta Load."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 17,
+      "target": "#formula-section-panel",
+      "title": {
+        "en": "Equations"
+      },
+      "description": {
+        "en": "This section displays the equation used to calculate the theoretical three-phase active power for Star and Delta load connections."
+      },
+      "placement": "right"
+    },
+    {
+      "id": 18,
       "target": "#calculations-panel",
       "title": {
         "en": "Theoretical Verification"
       },
       "description": {
-        "en": "This is the theoretical verification panel. For verification, you have to calculate power for both connections. Enter the required values and compare the calculated power with the measured power to verify them."
+        "en": "This is the theoretical verification panel. For verification, you have to calculate the power for both Star and Delta load connections. Enter the required values using the measured readings and click the Calculate button. After that, enter the required values in the Error Analysis section and click the Calculate Error button to calculate the percentage error."
       },
       "placement": "top"
     },
     {
-      "id": 17,
+      "id": 19,
       "target": "#generate-report-button",
       "title": {
         "en": "Generate Report"
       },
       "description": {
-        "en": "The Report button generates a summarised report of the simulation. After completing the observation table and theoretical verification, generate the report. The report will include the time taken to complete the simulation, no. of attempts, the apparatus used, recorded readings, the user-calculated result, and the conclusion."
+        "en": "The Report button generates a summarised report of the simulation. After completing the observation table and theoretical verification, generate the report. The report will include the time taken to complete the simulation, the apparatus used, recorded readings, the user-calculated result, and the conclusion."
       },
       "placement": "right"
     }

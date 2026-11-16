@@ -80,7 +80,7 @@ const getInstructionSteps = (configuration) => [
   { id: 'reading', title: 'STEP 4:', content: 'Observe line voltage VL, line current IL, W1 and W2. Click ADD to record the readings. Total measured power W = W1 + W2.' },
   { id: 'configuration', title: 'STEP 5:', content: 'Switch OFF the MCB and select the other configuration. To convert Star to Delta, keep all supply and meter wires, remove (17–19) and (19–21), then add (16–19), (18–21), (17–20). For Star, reverse these lamp links. Repeat CHECK, MCB ON and ADD.' },
   { id: 'brightness', title: 'OBSERVE:', content: 'Star lamps glow less brightly because each phase receives VL / √3. Delta lamps glow brighter because each phase receives VL.' },
-  { id: 'calculations', title: 'STEP 6:', content: 'Theoretical verification enables automatically after recording both Star and Delta loads. Select Star or Delta, manually enter VL and IL from the observation table, and calculate P = √3 × VL × IL with cosφ = 1. Enter your calculated P and click Verify for each load.' },
+  { id: 'calculations', title: 'STEP 6:', content: 'Theoretical verification enables automatically after recording both Star and Delta loads. Select Star or Delta, manually enter VL and IL from the observation table, enter cosφ = 1 for this resistive load, and calculate P = √3 × VL × IL × cosφ. Enter your calculated P and click Calculate for each load. In each Error Analysis formula, manually enter Measured Value and True Value in the two separate numerator boxes, and True Value in the denominator box. Use watts, then click Calculate Error to display both percentage errors.' },
   { id: 'report', title: 'STEP 7:', content: 'After both loads are verified, click Generate Report to review the observations, your calculated results, attempts and conclusion. Use Print / Save as PDF in the report window.' },
   { id: 'finish', title: 'FINISH:', content: 'PRINT prints the simulation. RESET clears the wires and readings for a new experiment.' },
 ]
@@ -94,7 +94,6 @@ const ActionButtons = ({
   onAdd,
   onAiGuide,
   onCheck,
-  onInstructionsOpen,
   onPrint,
   onReset,
   onAutoConnect,
@@ -135,7 +134,6 @@ const ActionButtons = ({
                 'aria-expanded': instructionsOpen,
                 onClick: () => {
                   setInstructionsOpen(!instructionsOpen)
-                  if (!instructionsOpen) onInstructionsOpen?.()
                 },
               }
             : {

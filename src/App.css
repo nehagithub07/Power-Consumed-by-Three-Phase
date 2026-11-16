@@ -594,6 +594,17 @@
   grid-column: 1 / -1;
 }
 
+.formula-tile__heading {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.formula-tile__heading svg {
+  width: 13px;
+  height: 13px;
+}
+
 .formula-tile h3 {
   margin: 0 0 3px;
   color: #87643a;
@@ -625,23 +636,46 @@
 }
 
 .formula-equation--error {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: auto max-content auto;
+  grid-template-rows: auto auto;
+  justify-content: start;
+  column-gap: 6px;
   font-size: 13px;
 }
 
 .formula-fraction {
-  display: inline-grid;
-  min-width: 50px;
+  display: contents;
   font-size: 12px;
   line-height: 14px;
   text-align: center;
 }
 
 .formula-fraction > :first-child {
+  grid-column: 2;
+  grid-row: 1;
   padding: 0 3px 1px;
   border-bottom: 1px solid #ad8857;
+}
+
+.formula-fraction > :last-child {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.formula-equation--error > :first-child,
+.formula-equation--error > :last-child {
+  grid-row: 2;
+  align-self: start;
+  transform: translateY(-50%);
+}
+
+.formula-equation--error > :first-child {
+  grid-column: 1;
+}
+
+.formula-equation--error > :last-child {
+  grid-column: 3;
 }
 
 .formula-phase-row {
@@ -718,6 +752,9 @@
 
 .calculations-panel {
   position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
   width: 1440px;
   height: 430px;
   margin: 28px 0 0;
@@ -732,6 +769,7 @@
 }
 
 .calculations-panel__sheet {
+  min-width: 0;
   height: 100%;
   overflow: hidden;
   border: 2px solid rgba(255, 252, 244, 0.92);
@@ -745,7 +783,7 @@
   height: 48px;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 12px;
   border-bottom: 2px solid #bc935a;
   color: #fff4dc;
   background: linear-gradient(180deg, #754625, #3d2417);
@@ -759,14 +797,14 @@
 }
 
 .calculations-panel__heading-line {
-  width: 80px;
+  width: 38px;
   height: 1px;
   background: linear-gradient(90deg, transparent, #d2a965, transparent);
 }
 
 .calculations-panel__heading h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
   letter-spacing: 1px;
   line-height: 1;
@@ -774,7 +812,7 @@
 }
 
 .calculations-panel__body {
-  padding: 16px 26px;
+  padding: 18px 20px;
 }
 
 .calculations-panel__fields {
@@ -794,20 +832,11 @@
   cursor: not-allowed;
 }
 
-.calculation-verified {
-  padding: 4px 10px;
-  border-radius: 6px;
-  color: #245631;
-  background: #dfeddb;
-  font-size: 13px;
-  font-weight: 700;
-}
-
 .calculations-panel__toolbar {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 24px;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
@@ -816,7 +845,7 @@
   align-items: center;
   gap: 11px;
   margin: 0;
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 700;
 }
 
@@ -834,7 +863,7 @@
 }
 
 .calculations-panel__selector {
-  min-width: 165px;
+  min-width: 130px;
   height: 38px;
   padding: 6px 12px;
   border: 1px solid #a48052;
@@ -861,16 +890,16 @@
   font-weight: 700;
 }
 
-.calculation-formula__operator,
-.calculation-formula__note {
+.calculation-formula__operator {
   padding-bottom: 9px;
 }
 
 .calculation-formula__note {
-  margin-left: 24px;
+  margin: 9px 0 0;
   color: #7a5a35;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 400;
+  line-height: 18px;
 }
 
 .calculation-field {
@@ -887,7 +916,8 @@
 }
 
 .calculation-field input,
-.calculation-result input {
+.calculation-result input,
+.error-analysis-input {
   width: 100%;
   height: 40px;
   padding: 6px 10px;
@@ -957,6 +987,7 @@
   box-shadow: inset 0 1px 1px rgba(255, 238, 205, 0.5), 0 3px 5px rgba(82, 46, 18, 0.22);
   font-size: 14px;
   font-weight: 700;
+  cursor: pointer;
   text-shadow: 0 1px 1px rgba(59, 31, 10, 0.4);
   transition: filter 150ms ease, transform 150ms ease;
 }
@@ -972,6 +1003,166 @@
 
 .calculation-button:active:not(:disabled) {
   transform: translateY(1px);
+}
+
+.calculation-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.calculations-panel__hint {
+  margin: 12px 0 0;
+  color: #806345;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.error-analysis-panel .calculations-panel__body {
+  padding: 8px 18px;
+}
+
+.error-analysis-form {
+  margin: 0;
+}
+
+.error-analysis-note {
+  margin: 0 0 4px;
+  color: #806345;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.error-analysis-load {
+  padding: 5px 12px;
+}
+
+.error-analysis-load + .error-analysis-load {
+  margin-top: 8px;
+}
+
+.error-analysis-load__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.error-analysis-load__heading h3 {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.error-analysis-equation {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(60px, auto);
+  grid-template-rows: auto auto;
+  column-gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.error-analysis-fraction {
+  display: contents;
+  text-align: center;
+}
+
+.error-analysis-numerator {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 5px;
+  padding: 0 4px 4px;
+  border-bottom: 1px solid #ad8857;
+  font-size: 12px;
+  line-height: 14px;
+}
+
+.error-analysis-value {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.error-analysis-value > span {
+  font-size: 11px;
+}
+
+.error-analysis-value small,
+.error-analysis-denominator small {
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.error-analysis-absolute-bar {
+  font-size: 35px;
+  font-weight: 400;
+  line-height: 30px;
+}
+
+.error-analysis-minus {
+  font-size: 20px;
+  line-height: 30px;
+}
+
+.error-analysis-denominator {
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding-top: 4px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.error-analysis-result {
+  grid-column: 4;
+  color: #70451e;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.error-analysis-operator,
+.error-analysis-result {
+  grid-row: 2;
+  align-self: start;
+  transform: translateY(-50%);
+}
+
+.error-analysis-operator--label {
+  grid-column: 1;
+}
+
+.error-analysis-operator--multiplier {
+  grid-column: 3;
+}
+
+.error-analysis-input {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 3px 8px;
+  font-size: 15px;
+}
+
+.error-analysis-denominator .error-analysis-input {
+  width: 110px;
+}
+
+.error-analysis-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.error-analysis-button {
+  min-height: 36px;
+  margin-top: 8px;
 }
 
 .simulation-footer {

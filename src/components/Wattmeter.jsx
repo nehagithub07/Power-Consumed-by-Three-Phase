@@ -16,6 +16,7 @@ const Wattmeter = ({ number, value = 0 }) => {
       <MeterNeedle className="meter-needle--wattmeter" rotation={meterDisplay.rotation} />
       {[0, 1, 2, 3].map((offset) => (
         <ApparatusTerminal key={offset} number={firstTerminal + offset} owner={`Wattmeter W${number}`}
+          color={offset === 0 ? 'black' : number === 1 ? 'red' : 'blue'}
           polarity={offset === 0 ? 'plus' : 'minus'} variant="wattmeter"
           x={`${16.5 + offset * 22}%`} y="81%" labelY="104%" />
       ))}

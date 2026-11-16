@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 
 import { registerExclusiveAudio } from '../../audio/exclusiveAudio.js'
 import { useFocusTrap } from '../hooks/useFocusTrap.js'
+import FormattedWalkthroughText from './FormattedWalkthroughText.jsx'
 
 const EDGE_GAP = 16
 const TARGET_GAP = 18
@@ -14,14 +15,6 @@ const DEFAULT_POPUP_SIZE = {
 const isValidAudioSource = (audio) => Boolean(audio && audio !== '#')
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
-
-const renderFormattedDescription = (description) => (
-  String(description).split(/(\*\*.*?\*\*)/g).map((part, index) => (
-    part.startsWith('**') && part.endsWith('**')
-      ? <strong key={index}>{part.slice(2, -2)}</strong>
-      : part
-  ))
-)
 
 const getPlacementOrder = (placement) => {
   const fallbackPlacements = ['bottom', 'right', 'left', 'top']
@@ -258,12 +251,12 @@ const WalkthroughPopup = ({
       <div className="walkthrough-popup__header">
         <div>
           <p className="walkthrough-popup__eyebrow">Guided Walkthrough</p>
-          <h2 id={titleId}>{activeStep.title}</h2>
+          <h2 id={titleId}><FormattedWalkthroughText>{activeStep.title}</FormattedWalkthroughText></h2>
         </div>
       </div>
 
       <p className="walkthrough-popup__description" id={descriptionId}>
-        {renderFormattedDescription(activeStep.description)}
+        <FormattedWalkthroughText>{activeStep.description}</FormattedWalkthroughText>
       </p>
 
       <div className="walkthrough-popup__progress" aria-hidden="true">
