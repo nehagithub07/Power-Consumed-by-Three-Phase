@@ -3,11 +3,10 @@ import { LOAD_CONFIGURATIONS } from '../utils/threePhaseExperiment.js'
 import { hasBothObservations, isAllowedVerificationInput } from '../utils/manualVerification.js'
 import { PercentIcon, FormulaIcon } from './Icons.jsx'
 
-const CalculationSection = ({ observations, verification, onChange, onCalculate, onErrorChange, onCalculateErrors, onNotify }) => {
+const CalculationSection = ({ observations, verification, onChange, onCalculate, onErrorChange, onCalculateErrors }) => {
   const [configuration, setConfiguration] = useState('Star')
   const entry = verification.entries[configuration]
   const enabled = verification.enabled && hasBothObservations(observations)
-  const bothCalculated = enabled && LOAD_CONFIGURATIONS.every((load) => verification.entries[load].verified)
 
   const updateField = (field, value) => {
     if (isAllowedVerificationInput(field, value)) onChange(configuration, field, value)
@@ -16,7 +15,6 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
   const selectConfiguration = (event) => {
     const nextConfiguration = event.target.value
     setConfiguration(nextConfiguration)
-    onNotify?.(`${nextConfiguration} Verification Selected`, 'Manually enter the line voltage and current from the observation table, cos φ and your calculated power P, then click Calculate.')
   }
 
   const calculate = (event) => {
@@ -26,7 +24,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
 
   const calculateErrors = (event) => {
     event.preventDefault()
-    if (bothCalculated) onCalculateErrors()
+    if (enabled) onCalculateErrors(configuration)
   }
 
   return (
@@ -95,7 +93,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
           <span className="calculations-panel__heading-line" />
         </header>
         <div className="calculations-panel__body">
-          <form className="error-analysis-form" onSubmit={calculateErrors} noValidate aria-label="Star and Delta error analysis">
+          <form className="error-analysis-form" onSubmit={calculateErrors} noValidate aria-label={`${configuration} error analysis`}>
             <p className="error-analysis-note">True Value = Theoretical Value</p>
             {LOAD_CONFIGURATIONS.map((load) => {
               const loadEntry = verification.entries[load]
@@ -112,14 +110,14 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                         <label className="error-analysis-value">
                           <span>Measured Value <small>(W)</small></span>
                           <input className="error-analysis-input" aria-label={`${load} measured value in numerator (W)`} type="text" inputMode="decimal"
-                            required disabled={!enabled || !loadEntry.verified} title="Manually enter the measured value in watts."
+                            required disabled={!enabled || load !== configuration} title="Manually enter the measured value in watts."
                             value={loadEntry.errorMeasuredPower ?? ''} onChange={(event) => onErrorChange(load, 'errorMeasuredPower', event.target.value)} />
                         </label>
                         <span className="error-analysis-minus" aria-hidden="true">−</span>
                         <label className="error-analysis-value">
                           <span>True Value <small>(W)</small></span>
                           <input className="error-analysis-input" aria-label={`${load} true value in numerator (W)`} type="text" inputMode="decimal"
-                            required disabled={!enabled || !loadEntry.verified} title="Manually enter the theoretical value in watts."
+                            required disabled={!enabled || load !== configuration} title="Manually enter the theoretical value in watts."
                             value={loadEntry.errorTruePower ?? ''} onChange={(event) => onErrorChange(load, 'errorTruePower', event.target.value)} />
                         </label>
                         <span className="error-analysis-absolute-bar" aria-hidden="true">|</span>
@@ -127,7 +125,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                       <label className="error-analysis-denominator">
                         <span>True Value <small>(W)</small></span>
                         <input className="error-analysis-input" aria-label={`${load} true value in denominator (W)`} type="text" inputMode="decimal"
-                          required disabled={!enabled || !loadEntry.verified} title="Manually enter the theoretical value in the denominator in watts."
+                          required disabled={!enabled || load !== configuration} title="Manually enter the theoretical value in the denominator in watts."
                           value={loadEntry.errorDenominator ?? ''} onChange={(event) => onErrorChange(load, 'errorDenominator', event.target.value)} />
                       </label>
                     </div>
@@ -139,7 +137,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                 </article>
               )
             })}
-            <button className="calculation-button error-analysis-button" type="submit" disabled={!bothCalculated}>Calculate Error</button>
+            <button className="calculation-button error-analysis-button" type="submit" disabled={!enabled}>Calculate Error</button>
           </form>
         </div>
       </section>

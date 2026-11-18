@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { CONNECTIONS } from '../utils/threePhaseExperiment.js'
 import SectionCard from './SectionCard.jsx'
+import guideConfig from '../aiGuide/aiGuideConfig.json'
+import FormattedWalkthroughText from '../walkthrough/components/FormattedWalkthroughText.jsx'
 import {
   AddIcon,
   AiGuide,
@@ -66,23 +68,24 @@ const buttons = [
  
 ]
 
-const getInstructionSteps = (configuration) => [
-  {
-    id: 'connections', title: 'STEP 1:',
-    content: `Select ${configuration} and make these connections:`,
-    groups: CONNECTIONS[configuration].map(([first, second], index) => ({
-      id: `connection-${first}-${second}`, label: `Connection ${index + 1}:`, pairs: [`${first}-${second}`],
-    })),
-  },
-  { id: 'note', title: 'NOTE:', content: 'With the MCB OFF, click a terminal number to remove all wires at that node. Reconnect any required wires that were removed.' },
-  { id: 'check', title: 'STEP 2:', content: 'For manual wiring, click CHECK. If Invalid Connections appears, correct the listed wires and check again. AUTO CONNECT connects and verifies the wiring automatically. Once verified, CHECK is disabled and you can switch ON the MCB.' },
-  { id: 'mcb', title: 'STEP 3:', content: 'Switch ON the MCB after the connections have been verified.' },
-  { id: 'reading', title: 'STEP 4:', content: 'Observe line voltage VL, line current IL, W1 and W2. Click ADD to record the readings. Total measured power W = W1 + W2.' },
-  { id: 'configuration', title: 'STEP 5:', content: 'Switch OFF the MCB and select the other configuration. To convert Star to Delta, keep all supply and meter wires, remove (17–19) and (19–21), then add (16–19), (18–21), (17–20). For Star, reverse these lamp links. Repeat CHECK, MCB ON and ADD.' },
-  { id: 'brightness', title: 'OBSERVE:', content: 'Star lamps glow less brightly because each phase receives VL / √3. Delta lamps glow brighter because each phase receives VL.' },
-  { id: 'calculations', title: 'STEP 6:', content: 'Theoretical verification enables automatically after recording both Star and Delta loads. Select Star or Delta, manually enter VL and IL from the observation table, enter cosφ = 1 for this resistive load, and calculate P = √3 × VL × IL × cosφ. Enter your calculated P and click Calculate for each load. In each Error Analysis formula, manually enter Measured Value and True Value in the two separate numerator boxes, and True Value in the denominator box. Use watts, then click Calculate Error to display both percentage errors.' },
-  { id: 'report', title: 'STEP 7:', content: 'After both loads are verified, click Generate Report to review the observations, your calculated results, attempts and conclusion. Use Print / Save as PDF in the report window.' },
-  { id: 'finish', title: 'FINISH:', content: 'PRINT prints the simulation. RESET clears the wires and readings for a new experiment.' },
+const getInstructionSteps = configuration => [
+  { id: 'ai-guide', title: 'AI Guide', content: guideConfig.description },
+  ...guideConfig.steps.flatMap(step => {
+    const item = { ...step }
+    if (step.id === 'connections') {
+      return [
+        { ...item, groups: CONNECTIONS[configuration].map(([first, second], index) => ({
+          id: `connection-${first}-${second}`, label: `Connection ${index + 1}`,
+          pairs: [`${first}-${second}`],
+        })) },
+        { id: 'note', title: 'NOTE', content: guideConfig.note },
+      ]
+    }
+    if (step.id === 'repeat') {
+      return [item, { id: 'brightness', title: 'OBSERVE', content: guideConfig.observe }]
+    }
+    return [item]
+  }),
 ]
 
 const ActionButtons = ({
@@ -194,7 +197,7 @@ const ActionButtons = ({
                     key={step.id}
                     ref={isActiveStep && !hasActiveSubstep ? activeInstructionRef : undefined}
                   >
-                    <strong>{step.title}</strong> {step.content}
+                    <strong>{step.title}</strong> <FormattedWalkthroughText>{step.content}</FormattedWalkthroughText>
                     {step.groups ? (
                       <ul className="action-instructions-panel__substeps">
                         {step.groups.map((group) => {

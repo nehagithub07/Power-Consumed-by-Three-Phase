@@ -39,6 +39,7 @@ export const syncWireAnchors = (container, instance) => {
   const rect = container.getBoundingClientRect()
   const scaleX = rect.width / container.offsetWidth || 1
   const scaleY = rect.height / container.offsetHeight || 1
+  instance?.setZoom(scaleX)
   terminalIds.forEach((id) => {
     const visual = container.querySelector(`.connection-terminal[data-terminal-id="${id}"]`)
     if (!visual) return

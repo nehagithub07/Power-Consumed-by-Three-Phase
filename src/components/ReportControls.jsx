@@ -1,5 +1,5 @@
 import { PdfIcon } from './Icons.jsx'
-import { hasBothObservations, isReportReady } from '../utils/manualVerification.js'
+import { hasBothObservations, isReportReady, isVerificationComplete } from '../utils/manualVerification.js'
 
 const ReportControls = ({
   observations = [],
@@ -17,7 +17,8 @@ const ReportControls = ({
       className="report-button"
       disabled={!reportReady}
       title={!readingsReady ? 'Record both Star and Delta observations first.'
-        : !reportReady ? 'Complete theoretical verification for both Star Load Connection and Delta Load Connection first.' : 'Generate the experiment report.'}
+        : !isVerificationComplete(verification) ? 'Complete the Star and Delta power calculations first.'
+        : !reportReady ? 'Complete error analysis for both Star and Delta loads first.' : 'Generate the experiment report.'}
       aria-label="GENERATE REPORT"
       data-report-generated={reportGenerated ? 'true' : 'false'}
       onClick={reportReady ? onGenerateReport : undefined}

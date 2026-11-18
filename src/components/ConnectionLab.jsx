@@ -19,6 +19,7 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
     let instance
     let observer
     let colorObserver
+    let changeQueued = false
     const lab = labRef.current
     const refresh = () => {
       if (disposed || !instance) return
@@ -26,10 +27,20 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
       updateTerminalConnectionStates(instance, lab)
       instance.repaintEverything()
     }
-    const changed = () => {
+    const reportWiringChange = () => {
       if (disposed) return
       updateTerminalConnectionStates(instance, lab)
       live.current.onWiringChange(validateCircuit(instance, live.current.configuration))
+    }
+    const changed = () => {
+      if (disposed || changeQueued) return
+      changeQueued = true
+      // jsPlumb can emit detach events before updating its connection list.
+      queueMicrotask(() => {
+        if (!changeQueued) return
+        changeQueued = false
+        reportWiringChange()
+      })
     }
     const removeWire = (event) => {
       const label = event.target.closest('.terminal-number-label')
@@ -60,11 +71,13 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
             if (live.current.powerOn) return
             autoConnectCircuit(instance, live.current.configuration)
             refresh()
-            changed()
+            changeQueued = false
+            reportWiringChange()
           },
           reset: () => {
             instance.deleteEveryConnection({ force: true })
-            changed()
+            changeQueued = false
+            reportWiringChange()
           },
         })
         observer = new ResizeObserver(refresh)

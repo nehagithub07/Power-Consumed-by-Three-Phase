@@ -5,7 +5,7 @@
     "en"
   ],
   "audio": {
-    "autoplay": false
+    "autoplay": true
   },
   "steps": [
     {
@@ -17,87 +17,11 @@
       "description": {
         "en": "The aim of the experiment is to study and measure the power consumed by a three-phase resistive load using the two-wattmeter method."
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/Aim.wav"
     },
     {
       "id": 2,
-      "target": "#instruction-button",
-      "title": {
-        "en": "Instructions Button"
-      },
-      "description": {
-        "en": "The Instructions provide step-by-step guidance on how to perform the simulation."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 3,
-      "target": "#ai-guide-button",
-      "title": {
-        "en": "AI Guide Button"
-      },
-      "description": {
-        "en": "The AI guide will assist you in performing the simulation accurately at each step."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 4,
-      "target": "#check-button",
-      "title": {
-        "en": "Check Button"
-      },
-      "description": {
-        "en": "The **CHECK** button verifies all the connections to ensure that they are correct.\n\n**Note:** If a wire is connected incorrectly, click the corresponding label number to remove the connection."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 5,
-      "target": "#auto-connect-button",
-      "title": {
-        "en": "Auto Connect Button"
-      },
-      "description": {
-        "en": "The **AUTO CONNECT** button makes all the connections automatically."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 6,
-      "target": "#add-reading-button",
-      "title": {
-        "en": "Add Button"
-      },
-      "description": {
-        "en": "The **ADD** button adds the readings to the observation table."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 7,
-      "target": "#reset-button",
-      "title": {
-        "en": "Reset Button"
-      },
-      "description": {
-        "en": "The **RESET** button refreshes the simulation to its initial state for a fresh start."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 8,
-      "target": "#print-button",
-      "title": {
-        "en": "Print Button"
-      },
-      "description": {
-        "en": "The **PRINT** button allows you to print the simulation."
-      },
-      "placement": "right"
-    },
-    {
-      "id": 9,
       "target": "#power-supply",
       "title": {
         "en": "MCB"
@@ -105,10 +29,11 @@
       "description": {
         "en": "The MCB acts as the main power switch for the experiment. It also protects the circuit by automatically disconnecting the power supply in case of an overload or short circuit. When turned ON, it supplies electrical power to the circuit.\n\n**Rating:** 16A, 3P, 415V AC, 50 Hz"
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/MCB.wav"
     },
     {
-      "id": 10,
+      "id": 3,
       "target": "#voltmeter-meter",
       "title": {
         "en": "AC Voltmeter"
@@ -116,10 +41,11 @@
       "description": {
         "en": "This voltmeter is used to measure the line voltage (VL). It is connected between the R and Y Phases of the three-phase supply to measure the voltage supplied to the load.\n\n**Rating:** 0 - 600 V"
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/AC Voltmeter.wav"
     },
     {
-      "id": 11,
+      "id": 4,
       "target": "#ammeter-meter",
       "title": {
         "en": "AC Ammeter"
@@ -127,29 +53,20 @@
       "description": {
         "en": "This ammeter is used to measure the load current (IL) flowing through the load. It is connected in series with the phase of the circuit.\n\n**Rating:** 0 - 10 A"
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/AC Ammeter.wav"
     },
     {
-      "id": 12,
+      "id": 5,
       "target": "#wattmeter-1",
       "title": {
-        "en": "AC Wattmeter (W1)"
+        "en": "AC Wattmeter"
       },
       "description": {
         "en": "The two wattmeters are used to measure the total active power consumed by the three-phase balanced load. Its current coil is connected in series with the R and B phases, while its pressure coil is connected to the Y-phase. The total active power is given by the algebraic sum of the two wattmeter readings (P = W1 + W2).\n\n**Rating:** 0 - 600 W"
       },
-      "placement": "top"
-    },
-    {
-      "target": "#wattmeter-2",
-      "title": {
-        "en": "AC Wattmeter (W2)"
-      },
-      "description": {
-        "en": "The two wattmeters are used to measure the total active power consumed by the three-phase balanced load. Its current coil is connected in series with the R and B phases, while its pressure coil is connected to the Y-phase. The total active power is given by the algebraic sum of the two wattmeter readings (P = W1 + W2).\n\n**Rating:** 0 - 600 W"
-      },
-      "placement": "left",
-      "id": 13
+      "placement": "top",
+      "audio": "./walkthrough-audios/AC Wattmeter.wav"
     },
     {
       "target": "#load-configuration-panel",
@@ -160,10 +77,11 @@
         "en": "This section is used to select the connection configuration of the three-phase lamp load. It provides two options: Star (Y) and Delta (Δ). In Star connection, one end of each phase load is connected to a common neutral point, whereas in Delta connection, the three-phase loads are connected end-to-end to form a closed loop."
       },
       "placement": "right",
-      "id": 14
+      "id": 6,
+      "audio": "./walkthrough-audios/Load Connection.wav"
     },
     {
-      "id": 15,
+      "id": 7,
       "target": "#lamp-load",
       "title": {
         "en": "Lamp Load"
@@ -171,10 +89,11 @@
       "description": {
         "en": "The lamp load is used as a three-phase balanced resistive load to study power consumption using the Two-Wattmeter Method. It consists of three sets of lamps representing the R, Y, and B phases. The load can be configured in either Star (Y) or Delta (Δ) connection to observe the variation in line voltage, line current, and power consumption.\n\n**Rating:** 150 W per lamp"
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/Lamp Load .wav"
     },
     {
-      "id": 16,
+      "id": 8,
       "target": "#observation-table-panel",
       "title": {
         "en": "Observation Table"
@@ -182,10 +101,11 @@
       "description": {
         "en": "This table records the measured line voltage (VL), line current (IL), and Power (W1 and W2) for Star and Delta Load."
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/Observation Table.wav"
     },
     {
-      "id": 17,
+      "id": 9,
       "target": "#formula-section-panel",
       "title": {
         "en": "Equations"
@@ -193,10 +113,11 @@
       "description": {
         "en": "This section displays the equation used to calculate the theoretical three-phase active power for Star and Delta load connections."
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/Equations.wav"
     },
     {
-      "id": 18,
+      "id": 10,
       "target": "#calculations-panel",
       "title": {
         "en": "Theoretical Verification"
@@ -204,10 +125,11 @@
       "description": {
         "en": "This is the theoretical verification panel. For verification, you have to calculate the power for both Star and Delta load connections. Enter the required values using the measured readings and click the Calculate button. After that, enter the required values in the Error Analysis section and click the Calculate Error button to calculate the percentage error."
       },
-      "placement": "top"
+      "placement": "top",
+      "audio": "./walkthrough-audios/Theoretical Verification.wav"
     },
     {
-      "id": 19,
+      "id": 11,
       "target": "#generate-report-button",
       "title": {
         "en": "Generate Report"
@@ -215,7 +137,8 @@
       "description": {
         "en": "The Report button generates a summarised report of the simulation. After completing the observation table and theoretical verification, generate the report. The report will include the time taken to complete the simulation, the apparatus used, recorded readings, the user-calculated result, and the conclusion."
       },
-      "placement": "right"
+      "placement": "right",
+      "audio": "./walkthrough-audios/Generate Report .wav"
     }
   ]
 }

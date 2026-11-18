@@ -375,7 +375,7 @@
 }
 
 .connection-lab .connection-terminal.simulation-guide-highlight {
-  z-index: 145 !important;
+  z-index: 110 !important;
   border-color: rgba(245, 158, 11, 0.98);
   filter: brightness(1.08) saturate(1.18);
   box-shadow:
@@ -406,18 +406,16 @@
 .connection-lab .terminal-number-label.simulation-guide-highlight,
 .connection-lab .connection-terminal.simulation-guide-highlight + .terminal-number-label {
   z-index: 150 !important;
-  border-color: rgba(245, 158, 11, 0.9);
-  color: #111827;
-  background:
-    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 1) 0 18%, transparent 19%),
-    linear-gradient(145deg, #fff7ed, #e0f7ff);
+  border-color: rgba(var(--endpoint-accent-rgb), 0.78);
+  color: #ffffff;
+  background: var(--endpoint-accent);
   box-shadow:
-    0 0 0 4px rgba(255, 255, 255, 0.95),
-    0 0 0 9px rgba(245, 158, 11, 0.22),
-    0 6px 16px rgba(15, 23, 42, 0.28),
-    0 0 22px rgba(14, 165, 233, 0.48),
-    inset 1px 1px 1px rgba(255, 255, 255, 0.96);
-  transform: translateX(-50%) translateY(-2px) scale(1.12);
+    0 0 0 3px rgba(255, 255, 255, 0.96),
+    0 0 0 8px rgba(var(--endpoint-accent-rgb), 0.16),
+    0 0 18px rgba(var(--endpoint-accent-rgb), 0.54),
+    inset 0 1px 1px rgba(255, 255, 255, 0.38);
+  transform: translateX(-50%) translateY(-2px) scale(1.08);
+  animation: terminal-number-guide-pulse 1100ms ease-in-out infinite;
 }
 
 .connection-lab .wire-anchor.simulation-guide-highlight {
@@ -454,3 +452,19 @@
 .lamp-load .terminal-number-label { margin-top: -12px; }
 .connection-lab--locked .jtk-endpoint,
 .connection-lab--locked .wire-anchor { pointer-events: none; cursor: not-allowed; }
+
+@keyframes terminal-number-guide-pulse {
+  50% {
+    box-shadow:
+      0 0 0 3px rgba(255, 255, 255, 0.98),
+      0 0 0 10px rgba(var(--endpoint-accent-rgb), 0.24),
+      0 0 24px rgba(var(--endpoint-accent-rgb), 0.66),
+      inset 0 1px 1px rgba(255, 255, 255, 0.42);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connection-lab .terminal-number-label.simulation-guide-highlight {
+    animation: none;
+  }
+}

@@ -11,9 +11,11 @@ import CalculationSection from './components/CalculationSection.jsx'
 import SectionCard from './components/SectionCard.jsx'
 import WalkthroughStartButton from './walkthrough/components/WalkthroughStartButton.jsx'
 import { useLabAlerts } from './alerts/useLabAlerts.js'
-import { getWiringStepAlert } from './alerts/experimentAlerts.js'
+import { EXPERIMENT_MESSAGES } from './audio/simulationAudio.js'
+import { useNarrationPlayer } from './audio/useNarrationPlayer.js'
+import { useExperimentGuide } from './aiGuide/useExperimentGuide.js'
 import { generateExperimentReport } from './utils/reportGenerator.js'
-import { LOAD_CONFIGURATIONS, createObservation, getReadings, validateConnections } from './utils/threePhaseExperiment.js'
+import { CONNECTIONS, LOAD_CONFIGURATIONS, createObservation, getReadings, validateConnections } from './utils/threePhaseExperiment.js'
 import {
   createVerificationState, hasBothObservations, isReportReady, isVerificationComplete,
   submitErrorAnalysis, submitVerification, unlockVerification, updateErrorAnalysisEntry, updateVerificationEntry,
@@ -33,37 +35,30 @@ const App = () => {
   const [verification, setVerification] = useState(createVerificationState)
   const [connectionAttempts, setConnectionAttempts] = useState(0)
   const [reportGenerated, setReportGenerated] = useState(false)
-  const [guidePlaying, setGuidePlaying] = useState(false)
   const [wiringReady, setWiringReady] = useState(false)
   const [wiringProgress, setWiringProgress] = useState(() => validateConnections([], 'Star'))
   const [status, setStatus] = useState('Select Star or Delta. Connect the wires and click CHECK, or use AUTO CONNECT to connect and verify automatically.')
   const [sessionStart, setSessionStart] = useState(() => Date.now())
   const circuitRef = useRef(null)
-  const initialAlertShown = useRef(false)
+  const conversionRef = useRef(null)
   const suppressWiringAlerts = useRef(false)
   const previousWiringProgress = useRef(validateConnections([], 'Star'))
-  const readings = getReadings(configuration, powerOn)
   const alreadyRecorded = observations.some((row) => row.configuration === configuration)
   const bothRecorded = hasBothObservations(observations)
-  const bothVerified = isReportReady(verification, observations)
+  const bothVerified = isVerificationComplete(verification)
   const nextConnection = wiringProgress.missingConnections[0]
-  const activeStep = bothRecorded ? (reportGenerated ? 'finish' : bothVerified ? 'report' : 'calculations')
+  const errorsCalculated = LOAD_CONFIGURATIONS.every(load => verification.entries[load].percentageError != null)
+  const activeStep = bothRecorded
+    ? reportGenerated ? 'print' : !bothVerified ? 'calculations' : !errorsCalculated ? 'errors' : 'report'
     : alreadyRecorded ? 'configuration'
-      : !connectionsVerified ? (wiringProgress.isCorrect ? 'check' : 'connections')
-        : !powerOn ? 'mcb' : 'reading'
-  const guideText = bothRecorded
-    ? reportGenerated ? 'Report generated. Review the calculations for both configurations.'
-      : bothVerified ? 'Both load powers are calculated. Enter the measured value and both true values in each error formula, click Calculate Error, then generate the report.'
-        : 'Theoretical verification is enabled. Manually enter the voltage, current, cos φ and calculated power for each load, then click Calculate.'
-    : alreadyRecorded
-      ? `${powerOn ? 'Turn off the MCB, then select' : 'Select'} the other load configuration, change the lamp links and click CHECK or AUTO CONNECT.`
-      : !connectionsVerified
-    ? wiringProgress.wrongConnections.length
-      ? 'Remove the incorrect connections by clicking their terminal numbers, then click CHECK.'
-      : nextConnection ? `Connect terminal ${nextConnection.terminals[0]} to terminal ${nextConnection.terminals[1]}.`
-        : 'All wires are connected. Click CHECK to verify the connections.'
-        : !powerOn ? 'Turn on the MCB.'
-          : 'Observe line voltage, line current, W1 and W2. Click ADD to record the readings.'
+    : !connectionsVerified ? wiringProgress.isCorrect ? 'check' : 'connections'
+    : !powerOn ? 'mcb' : 'reading'
+  const readings = getReadings(configuration, powerOn)
+  const { play, playSequence, stop: stopPlayback } = useNarrationPlayer()
+  const getProgress = useCallback(() => (
+    circuitRef.current?.validate() ?? validateConnections([], configuration)
+  ), [configuration])
+  const guide = useExperimentGuide({ getProgress, onStatus: setStatus, play, playSequence, stopPlayback })
 
   useEffect(() => {
     const resize = () => setScale(getScale())
@@ -71,78 +66,86 @@ const App = () => {
     return () => window.removeEventListener('resize', resize)
   }, [])
 
-  useEffect(() => {
-    if (!guidePlaying || !('speechSynthesis' in window)) return
-    const speech = new SpeechSynthesisUtterance(guideText)
-    speech.lang = 'en-IN'
-    window.speechSynthesis.cancel()
-    window.speechSynthesis.speak(speech)
-    return () => window.speechSynthesis.cancel()
-  }, [guidePlaying, guideText])
 
-  const notify = useCallback((title, description, type = 'info', options = {}) => {
-    setStatus(description)
-    showAlert({ ...options, title, description, type })
-  }, [showAlert])
+  const announce = useCallback((key, options = {}) => {
+    const message = EXPERIMENT_MESSAGES[key]
+    setStatus(message.text)
+    if (message.alert) {
+      clearAlerts()
+      showAlert({
+        title: message.title, description: message.text, type: message.type,
+        duration: Math.max(6500, message.text.length * 60), ...options,
+      })
+    }
+    return play(message)
+  }, [clearAlerts, play, showAlert])
 
-  const handleReady = useCallback((api) => {
+  const handleReady = useCallback(api => {
     circuitRef.current = api
     setWiringReady(Boolean(api))
-    if (api && !initialAlertShown.current) {
-      initialAlertShown.current = true
-      notify('Start the Experiment', 'Select Star or Delta. Connect the terminals and click CHECK, or use AUTO CONNECT to connect and verify the circuit automatically.')
-    }
-  }, [notify])
+  }, [])
 
-  const handleWiringChange = useCallback((progress) => {
+  const handleWiringChange = useCallback(progress => {
     const previous = previousWiringProgress.current
     previousWiringProgress.current = progress
     setWiringProgress(progress)
     setConnectionsVerified(false)
     setPowerOn(false)
     if (suppressWiringAlerts.current) return
-    const alert = getWiringStepAlert(progress, previous, configuration)
-    if (alert) notify(alert.title, alert.description, alert.type, alert)
-  }, [configuration, notify])
+    const handledWrong = guide.updateProgress(progress, previous)
+    if (!handledWrong && progress.wrongConnections.length > previous.wrongConnections.length) {
+      announce('wrongConnection')
+    }
+    const previousLoad = conversionRef.current
+    if (previousLoad) {
+      const oldProgress = circuitRef.current?.validate(previousLoad)
+      const lampLinks = CONNECTIONS[previousLoad].slice(12)
+      const removed = oldProgress && lampLinks.every(([first, second]) => (
+        oldProgress.missingConnections.some(({ label }) => label === `${first}-${second}`)
+      ))
+      if (removed) {
+        conversionRef.current = null
+        const announcement = announce(previousLoad === 'Star' ? 'starRemoved' : 'deltaRemoved')
+        if (configuration !== previousLoad) guide.resumeConnections(announcement)
+        else guide.suspend()
+      }
+    }
+  }, [announce, configuration, guide])
 
-  const selectConfiguration = (nextConfiguration) => {
+  const selectConfiguration = nextConfiguration => {
     if (powerOn || nextConfiguration === configuration) return
+    guide.suspend()
     setConfiguration(nextConfiguration)
     setConnectionsVerified(false)
     const progress = circuitRef.current?.validate(nextConfiguration) ?? validateConnections([], nextConfiguration)
     previousWiringProgress.current = progress
     setWiringProgress(progress)
-    clearAlerts()
-    notify(`${nextConfiguration} Load Selected`, progress.totalConnections === 0
-      ? `Connect the supply, meters and ${nextConfiguration} lamp links, then click CHECK. You can also use AUTO CONNECT to connect and verify this load automatically.`
-      : nextConfiguration === 'Delta'
-      ? 'Keep the supply and wattmeter wires. Remove (17–19), (19–21); add (16–19), (18–21), (17–20). Then click CHECK.'
-      : 'Keep the supply and wattmeter wires. Remove the Delta links and join (17–19), (19–21). Then click CHECK.')
+    const announcement = announce(nextConfiguration === 'Star' ? 'starSelected' : 'deltaSelected')
+    guide.resumeConnections(announcement)
   }
 
   const handleCheck = (automatic = false) => {
     if (!circuitRef.current || powerOn) return
-    setConnectionAttempts((attempts) => attempts + 1)
-    clearAlerts()
+    setConnectionAttempts(attempts => attempts + 1)
     const result = circuitRef.current.validate()
     setWiringProgress(result)
     setConnectionsVerified(result.isCorrect)
     if (result.isCorrect) {
-      notify(automatic ? 'Auto Connect Complete' : 'Right Connections', `${configuration} connections verified. Switch ON the MCB to observe the readings.`, 'success')
-    } else {
-      const wrong = result.wrongConnections.map(({ label }) => `(${label})`).join(', ')
-      const missing = result.missingConnections.map(({ label }) => `(${label})`).join(', ')
-      notify('Invalid Connections', [
-        wrong && `Remove incorrect or duplicate wires: ${wrong}.`,
-        missing && `Missing connections: ${missing}.`,
-        'Click a terminal number to remove its wires.',
-      ].filter(Boolean).join('\n\n'), 'warning')
+      guide.suspend()
+      announce(automatic ? 'autoConnect' : 'connectionsVerified')
+      return
     }
+    if (!result.totalConnections) {
+      guide.resumeConnections(announce('emptyCheck'))
+      return
+    }
+    guide.resumeConnections(announce(result.wrongConnections.length ? 'wrongConnection' : 'emptyCheck'))
   }
 
   const handleAutoConnect = () => {
     if (!circuitRef.current || powerOn) return
-    clearAlerts()
+    guide.suspend()
+    conversionRef.current = null
     suppressWiringAlerts.current = true
     try {
       circuitRef.current.autoConnect()
@@ -154,41 +157,38 @@ const App = () => {
 
   const togglePower = () => {
     if (powerOn) {
+      guide.suspend()
       setPowerOn(false)
-      notify('MCB Switched OFF', bothRecorded
-        ? 'Both observations are recorded. Click Calculate for each load in the theoretical verification section, then calculate the percentage errors and generate the report.'
-        : alreadyRecorded ? 'Select the other load configuration, update the lamp links, then click CHECK or AUTO CONNECT.'
-          : 'You can edit the wiring or change the load. Switch ON the MCB again to record this load’s readings.')
+      conversionRef.current = configuration
+      announce('mcbOff' + configuration)
       return
     }
     if (!connectionsVerified || !circuitRef.current?.validate().isCorrect) {
-      notify('Check the Connections', 'Connect the wires and click CHECK, or use AUTO CONNECT to connect and verify automatically before switching ON the MCB.', 'warning')
+      guide.resumeConnections(announce('mcbBlocked'))
       return
     }
+    guide.suspend()
     setPowerOn(true)
-    notify('MCB Switched ON', `${configuration} lamps glow ${configuration === 'Star' ? 'dimly' : 'brightly'}. ${alreadyRecorded
-      ? 'This load is already recorded. Switch OFF the MCB to change loads or open the verification panel to compare the readings.'
-      : 'Observe the voltmeter, ammeter and both wattmeters, then click ADD to record the readings.'}`, 'success')
+    announce('mcbOn' + configuration)
   }
 
   const recordObservation = () => {
     if (!powerOn || !connectionsVerified) return
     if (alreadyRecorded) {
-      notify('Reading Already Exists', bothRecorded
-        ? 'Both load observations are already recorded. Click Calculate for each load in the theoretical verification section, then calculate the percentage errors and generate the report.'
-        : `The ${configuration} reading is already recorded. Switch off the MCB and select the other configuration.`, 'warning')
+      announce('duplicateReading')
       return
     }
     const nextObservations = [...observations, createObservation(configuration, observations.length + 1)]
     setObservations(nextObservations)
-    setVerification((current) => unlockVerification(current, nextObservations))
+    setVerification(current => unlockVerification(current, nextObservations))
     setReportGenerated(false)
-    notify('Reading Added', `${configuration} readings added: W1 + W2 = ${readings.w1 + readings.w2} W. ${hasBothObservations(nextObservations) ? 'Theoretical verification is now enabled. Manually enter the voltage, current, cos φ and calculated power for each load, then click Calculate.' : 'Switch OFF the MCB and repeat for the other configuration.'}`, 'success')
+    announce(nextObservations.length === 1 ? 'firstReading' : 'secondReading')
   }
 
   const reset = () => {
     clearAlerts()
-    setGuidePlaying(false)
+    guide.stop()
+    conversionRef.current = null
     suppressWiringAlerts.current = true
     try {
       circuitRef.current?.reset()
@@ -205,7 +205,7 @@ const App = () => {
     setConnectionAttempts(0)
     setReportGenerated(false)
     setSessionStart(Date.now())
-    notify('Simulation Reset', 'Wires, readings and calculations have been cleared. Select a load, then connect the terminals and click CHECK or use AUTO CONNECT.', 'success')
+    announce('reset')
   }
 
   const updateCalculation = (load, field, value) => {
@@ -217,16 +217,13 @@ const App = () => {
   const calculatePower = (load) => {
     const next = submitVerification(verification, load, observations)
     if (next === verification) {
-      notify('Verification Locked', 'Add both Star and Delta observations to enable theoretical verification.', 'warning')
+      setStatus('Add both Star and Delta observations to enable theoretical verification.')
       return
     }
     setVerification(next)
     setReportGenerated(false)
     const result = next.entries[load].feedback
-    const nextStep = isVerificationComplete(next)
-      ? ' Both load powers are calculated. Enter the measured value and both true values in each error formula, then click Calculate Error.'
-      : ` Select ${load === 'Star' ? 'Delta' : 'Star'} and click Calculate for its power next.`
-    notify(result.title, result.description + (result.verified ? nextStep : ''), result.type)
+    announce(result.narrationKey ?? 'powerIncorrect')
   }
 
   const updateErrorInput = (load, field, value) => {
@@ -234,34 +231,49 @@ const App = () => {
     setReportGenerated(false)
   }
 
-  const calculateErrors = () => {
-    const next = submitErrorAnalysis(verification, observations)
+  const calculateErrors = (load) => {
+    const next = submitErrorAnalysis(verification, load, observations)
     setVerification(next)
     setReportGenerated(false)
     const result = next.errorFeedback
-    notify(result.title, result.description, result.type)
+    announce(result.narrationKey ?? 'errorIncorrect')
   }
 
   const report = () => {
-    if (!bothRecorded || !bothVerified) {
-      notify('Complete Both Verifications', 'Record Star and Delta observations and verify both manual power calculations before generating the report.', 'warning')
+    if (!isReportReady(verification, observations)) {
+      setStatus('Complete the power calculations and error analysis for both Star and Delta loads before generating the report.')
       return
     }
-    const opened = generateExperimentReport({ observations, sessionStart, verification, connectionAttempts })
-    setReportGenerated(opened)
-    if (!opened) notify('Report Window Blocked', 'Allow pop-ups for this page, then click Generate Report again.', 'warning')
-    else notify('Report Generated', 'The report includes your observations, entered power values, attempts and conclusion. Use Print / Save as PDF in the report window.', 'success')
+    announce('reportGenerated', {
+      requiresConfirmation: true,
+      confirmLabel: 'OK',
+      onConfirm: () => {
+        const opened = generateExperimentReport({ observations, sessionStart, verification, connectionAttempts })
+        setReportGenerated(opened)
+        if (!opened) setStatus('Allow pop-ups for this page, then click Generate Report again.')
+      },
+    })
   }
 
   const toggleGuide = () => {
-    setGuidePlaying(!guidePlaying)
-    notify(guidePlaying ? 'AI Guide Stopped' : 'AI Guide Started', guidePlaying
-      ? 'Continue the experiment using INSTRUCTIONS. Click AI GUIDE to hear the next step again.'
-      : guideText)
+    if (guide.enabled) {
+      guide.stop()
+      setStatus('AI Guide stopped.')
+      return
+    }
+    let currentPrompt = null
+    if (connectionsVerified) currentPrompt = EXPERIMENT_MESSAGES.connectionsVerified
+    if (powerOn) currentPrompt = EXPERIMENT_MESSAGES['mcbOn' + configuration]
+    if (alreadyRecorded) currentPrompt = EXPERIMENT_MESSAGES.firstReading
+    if (bothRecorded) currentPrompt = EXPERIMENT_MESSAGES.secondReading
+    if (bothVerified) currentPrompt = EXPERIMENT_MESSAGES.powerCorrect
+    if (errorsCalculated) currentPrompt = EXPERIMENT_MESSAGES.secondErrorCorrect
+    guide.start(currentPrompt)
   }
 
-  const printSimulation = () => {
-    notify('Print Simulation', 'Choose a printer or Save as PDF in the print dialog to save the current experiment.')
+  const printSimulation = async () => {
+    setStatus(EXPERIMENT_MESSAGES.print.text)
+    await play(EXPERIMENT_MESSAGES.print)
     window.print()
   }
 
@@ -276,7 +288,7 @@ const App = () => {
               <section className="workspace-grid">
                 <aside className="left-panel">
                   <ActionButtons configuration={configuration} activeConnectionPair={nextConnection?.label}
-                    activeInstructionStepId={activeStep} activeButtons={{ onAiGuide: guidePlaying }}
+                    activeInstructionStepId={activeStep} activeButtons={{ onAiGuide: guide.enabled }}
                     disabledButtons={{ onAdd: !powerOn || !connectionsVerified, onAutoConnect: !wiringReady || powerOn,
                       onCheck: !wiringReady || powerOn || connectionsVerified, onAiGuide: !wiringReady }}
                     onAdd={recordObservation} onCheck={() => handleCheck()}
@@ -302,15 +314,15 @@ const App = () => {
                 <section className="right-panel">
                   <ConnectionLab configuration={configuration} powerOn={powerOn} readings={readings} scale={scale}
                     onReady={handleReady} onWiringChange={handleWiringChange} onTogglePower={togglePower}
-                    highlightedTerminals={guidePlaying && !connectionsVerified ? nextConnection?.terminals ?? [] : []} />
-                  <p className="sr-only" role="status" aria-live="polite">{guidePlaying ? guideText : status}</p>
+                    highlightedTerminals={guide.highlightedTerminals} />
+                  <p className="sr-only" role="status" aria-live="polite">{status}</p>
                 </section>
               </section>
             </main>
             <CalculationSection key={sessionStart} observations={observations} verification={verification}
               onChange={updateCalculation} onCalculate={calculatePower} onErrorChange={updateErrorInput}
-              onCalculateErrors={calculateErrors} onNotify={notify} />
-            <footer className="simulation-footer">&copy; 2026 Virtual Labs IIT Roorkee</footer>
+              onCalculateErrors={calculateErrors} />
+            <footer className="simulation-footer">&copy; 2026 Virtual Labs | IIT Roorkee</footer>
           </div>
         </div>
       </div>

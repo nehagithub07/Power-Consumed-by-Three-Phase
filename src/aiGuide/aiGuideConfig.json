@@ -1,0 +1,293 @@
+{
+  "description": "The AI guide will assist you in performing the simulation accurately at each step.",
+  "note": "The Star Load is selected by default. If a wire is connected incorrectly, click the corresponding label number to remove the connection.",
+  "observe": "The Star-connected lamps glow less brightly because each phase receives VL/√3, whereas the Delta-connected lamps glow brighter because each phase receives the full line voltage (VL).",
+  "steps": [
+    {
+      "id": "connections",
+      "title": "STEP 1",
+      "content": "Make connections as per the instructions given below or you can click the **AUTOCONNECT** button to make the connections automatically."
+    },
+    {
+      "id": "check",
+      "title": "STEP 2",
+      "content": "For manual connections, click the **CHECK** button to verify the connections. Autoconnect will automatically verify the connections."
+    },
+    {
+      "id": "mcb",
+      "title": "STEP 3",
+      "content": "Switch ON the MCB by clicking the MCB lever."
+    },
+    {
+      "id": "reading",
+      "title": "STEP 4",
+      "content": "Click the **ADD** button to record the readings."
+    },
+    {
+      "id": "configuration",
+      "title": "STEP 5",
+      "content": "Switch OFF the MCB and select the other load configuration. To convert Star to Delta, keep all supply and meter connections, remove the lamp connections (17–19) and (19–21), then make (16–19), (18–21), (17–20). For Delta to Star, reverse these lamp connections."
+    },
+    {
+      "id": "repeat",
+      "title": "STEP 6",
+      "content": "Repeat the steps 2 to 4 to add the readings for the next load."
+    },
+    {
+      "id": "calculations",
+      "title": "STEP 7",
+      "content": "Select Star or Delta from the dropdown, enter the required values from the observation table and enter calculated power and click the **Calculate** button."
+    },
+    {
+      "id": "errors",
+      "title": "STEP 8",
+      "content": "In Error Analysis, enter the measured and true values and click the **Calculate Error** button to calculate the percentage error."
+    },
+    {
+      "id": "other-calculations",
+      "title": "STEP 9",
+      "content": "Select a different load from the dropdown and repeat the steps 7 to 8."
+    },
+    {
+      "id": "report",
+      "title": "STEP 10",
+      "content": "Click the **GENERATE REPORT** button to generate the simulation report."
+    },
+    {
+      "id": "print",
+      "title": "STEP 11",
+      "content": "Click the **PRINT** button to print the simulation or simulation report."
+    },
+    {
+      "id": "reset",
+      "title": "STEP 12",
+      "content": "Click the **RESET** button to restart the simulation."
+    }
+  ],
+  "messages": {
+    "welcome": {
+      "text": "Hello! I am your AI Guide. I will guide you through each step of the experiment. Please follow the instructions carefully and perform the actions as directed. Before we begin, let us familiarize ourselves with the simulation interface. To start, click on the start walkthrough.",
+      "audioFile": "AI Guide click.wav",
+      "title": "",
+      "type": "info",
+      "alert": false
+    },
+    "walkthroughComplete": {
+      "text": "The interface walkthrough is now complete. You are now ready to perform the experiment. You may either click the Auto Connect button to make the circuit connections automatically or connect the circuit manually by following the highlighted terminals. Let's begin with the first connection.",
+      "audioFile": "The interface walkthrough is now complete.wav",
+      "title": "",
+      "type": "info",
+      "alert": false
+    },
+    "nextConnection": {
+      "text": "Let's move on to the next connection.",
+      "audioFile": "Let's move on to the next connection.wav",
+      "title": "",
+      "type": "info",
+      "alert": false
+    },
+    "connectionsComplete": {
+      "text": "All connections are completed. Click on the Check button to verify the connections.",
+      "audioFile": "Guide all complete conn.wav",
+      "title": "",
+      "type": "info",
+      "alert": false
+    },
+    "wrongConnection": {
+      "text": "This connection is wrong.",
+      "audioFile": "Wrong connection.wav",
+      "title": "",
+      "type": "info",
+      "alert": false
+    },
+    "emptyCheck": {
+      "text": "Please make the required connections as per the given instructions.",
+      "audioFile": "1st time check button click.wav",
+      "title": "Incomplete Connections",
+      "type": "warning",
+      "alert": true
+    },
+    "autoConnect": {
+      "text": "Autoconnect completed. Now turn ON the MCB by clicking the MCB lever.",
+      "audioFile": "Autoconnect.wav",
+      "title": "Autoconnect Completed",
+      "type": "success",
+      "alert": true
+    },
+    "starSelected": {
+      "text": "Star load selected. Make the required connections according to the given instructions, or use Auto Connect to make the connections automatically.",
+      "audioFile": "Star Load Selected (2).wav",
+      "title": "Star Load Selected",
+      "type": "info",
+      "alert": true
+    },
+    "deltaSelected": {
+      "text": "Delta load selected. Make the required connections according to the given instructions, or use Auto Connect to make the connections automatically.",
+      "audioFile": "Delta Load Selected.wav",
+      "title": "Delta Load Selected",
+      "type": "info",
+      "alert": true
+    },
+    "mcbBlocked": {
+      "text": "Make and check the connections before turning ON the MCB.",
+      "audioFile": "Before connection, on-click MCB Alert.wav",
+      "title": "Incomplete Connections",
+      "type": "warning",
+      "alert": true
+    },
+    "connectionsVerified": {
+      "text": "Connections Verified successfully. Now turn ON the MCB by clicking the MCB lever.",
+      "audioFile": "For correct connections, check click.wav",
+      "title": "Connections Verified",
+      "type": "success",
+      "alert": true
+    },
+    "mcbOnStar": {
+      "text": "MCB has been turned ON. The readings are now displayed on the voltmeters, ammeter, and wattmeters. Now, click the Add button to add the Star load readings to the observation table.",
+      "audioFile": "MCB ON STAR.wav",
+      "title": "MCB Turned ON",
+      "type": "success",
+      "alert": true
+    },
+    "mcbOnDelta": {
+      "text": "MCB has been turned ON. The readings are now displayed on the voltmeters, ammeter, and wattmeters. Now, click the Add button to add the Delta load readings to the observation table.",
+      "audioFile": "MCB ON DELTA.wav",
+      "title": "MCB Turned ON",
+      "type": "success",
+      "alert": true
+    },
+    "mcbOffStar": {
+      "text": "The MCB has been turned OFF. Now remove the connections 17 to 19 and 19 to 21.",
+      "audioFile": "MCB OFF STAR.wav",
+      "title": "MCB Turned OFF",
+      "type": "info",
+      "alert": true
+    },
+    "mcbOffDelta": {
+      "text": "The MCB has been turned OFF. Now remove the connections 16 to 19, 18 to 21 and 17 to 20.",
+      "audioFile": "MCB OFF DELTA.wav",
+      "title": "MCB Turned OFF",
+      "type": "info",
+      "alert": true
+    },
+    "firstReading": {
+      "text": "Readings added successfully. Now, turn OFF the MCB to switch the load.",
+      "audioFile": "1st readings added.wav",
+      "title": "Reading Added Successfully",
+      "type": "success",
+      "alert": true
+    },
+    "secondReading": {
+      "text": "Readings added successfully. Now, select the load in the theoretical verification panel to calculate the theoretical three-phase power using the measured readings.",
+      "audioFile": "2nd readings added.wav",
+      "title": "Reading Added Successfully",
+      "type": "success",
+      "alert": true
+    },
+    "duplicateReading": {
+      "text": "This reading already exists in the observation table.",
+      "audioFile": "Duplicate Readings.wav",
+      "title": "Duplicate Readings",
+      "type": "warning",
+      "alert": true
+    },
+    "starRemoved": {
+      "text": "Now, make the Delta load connections as per the given instructions.",
+      "audioFile": "Star connections removed.wav",
+      "title": "Star Connections Removed",
+      "type": "info",
+      "alert": true
+    },
+    "deltaRemoved": {
+      "text": "Now, make the Star load connections as per the given instructions.",
+      "audioFile": "Delta connections removed.wav",
+      "title": "Delta Connections Removed",
+      "type": "info",
+      "alert": true
+    },
+    "powerMissingMany": {
+      "text": "Please enter all the values, then click the \"Calculate\" button.",
+      "audioFile": "Calculate button click, more than one value is missing.wav",
+      "title": "Incomplete Values",
+      "type": "warning",
+      "alert": true
+    },
+    "powerMissingOne": {
+      "text": "Please enter the required value, then click the \"Calculate\" button.",
+      "audioFile": "Calculate button click, one value is missing.wav",
+      "title": "Incomplete Value",
+      "type": "warning",
+      "alert": true
+    },
+    "powerIncorrect": {
+      "text": "Incorrect calculations. Please review your calculations and try again.",
+      "audioFile": "Calculate button click, Incorrect calculations.wav",
+      "title": "Incorrect Calculations",
+      "type": "error",
+      "alert": true
+    },
+    "powerCorrect": {
+      "text": "Calculations are correct. Now, enter the required values in the error analysis section and click the Calculate Error button.",
+      "audioFile": "Calculate button click, Correct calculations.wav",
+      "title": "Correct Calculations",
+      "type": "success",
+      "alert": true
+    },
+    "errorMissingMany": {
+      "text": "Please enter all the values, then click the \"Calculate Error\" button.",
+      "audioFile": "Error button click, more than one value is missing.wav",
+      "title": "Incomplete Values",
+      "type": "warning",
+      "alert": true
+    },
+    "errorMissingOne": {
+      "text": "Please enter the required value, then click the \"Calculate Error\" button.",
+      "audioFile": "Error button click, one value is missing.wav",
+      "title": "Incomplete Value",
+      "type": "warning",
+      "alert": true
+    },
+    "errorIncorrect": {
+      "text": "Incorrect calculations. Please review your calculations and try again.",
+      "audioFile": "Calculate button click, Incorrect calculations.wav",
+      "title": "Incorrect Calculations",
+      "type": "error",
+      "alert": true
+    },
+    "firstErrorCorrect": {
+      "text": "The calculations are correct. Now, select a different load from the dropdown menu and calculate its theoretical power.",
+      "audioFile": "1st time Error button click, Correct calculations.wav",
+      "title": "Correct Calculations",
+      "type": "success",
+      "alert": true
+    },
+    "secondErrorCorrect": {
+      "text": "Calculations are correct. Now, click on the Generate Report button.",
+      "audioFile": "2nd time Error button click, Correct calculations.wav",
+      "title": "Correct Calculations",
+      "type": "success",
+      "alert": true
+    },
+    "reportGenerated": {
+      "text": "Your report has been generated successfully. Click OK to view your report.",
+      "audioFile": "Generate Report button click.wav",
+      "title": "Report Generated",
+      "type": "success",
+      "alert": true
+    },
+    "reset": {
+      "text": "The simulation has been reset. You can start again.",
+      "audioFile": "Reset.wav",
+      "title": "Simulation Reset",
+      "type": "info",
+      "alert": true
+    },
+    "print": {
+      "text": "Opening the print dialog.",
+      "audioFile": "Print.wav",
+      "title": "",
+      "type": "info",
+      "alert": false
+    }
+  }
+}
