@@ -8,7 +8,8 @@ const ACCEPTED_POWER = {
 const MANUAL_FIELDS = ['lineVoltage', 'lineCurrent', 'cosPhi', 'power']
 const ERROR_FIELDS = ['errorMeasuredPower', 'errorTruePower', 'errorDenominator']
 const DECIMAL_NUMBER = /^(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/
-const isPowerInRange = value => DECIMAL_NUMBER.test(String(value)) && Number(value) >= 100 && Number(value) <= 999
+const POWER_NUMBER = /^[0-9]{1,3}(?:\.[0-9]{1,2})?$/
+const isPowerInRange = value => POWER_NUMBER.test(String(value)) && Number(value) >= 100 && Number(value) <= 999
 
 export const isAllowedVerificationInput = (field, value) => {
   const text = String(value)
@@ -26,7 +27,7 @@ export const isAllowedVerificationInput = (field, value) => {
   }
   if (field === 'power' || ERROR_FIELDS.includes(field)) {
     // Allow incomplete values while typing; enforce the lower bound on submission.
-    return /^(?:[0-9]{1,3}(?:\.[0-9]*)?)?$/.test(text)
+    return /^(?:[0-9]{1,3}(?:\.[0-9]{0,2})?)?$/.test(text)
       && (text === '' || Number(text) <= 999)
   }
   return true
@@ -126,7 +127,7 @@ export const validateManualVerification = (configuration, entry, observations) =
   }
   const power = String(entry.power ?? '').trim()
   if (!isPowerInRange(power)) {
-    return warning('Check Calculated Power', 'Enter your calculated power P from 100 to 999 W.')
+    return warning('Check Calculated Power', 'Enter your calculated power P from 100 to 999 W with at most two decimal places.')
   }
   if (Number(entry.lineVoltage) !== observation.lineVoltage || Number(entry.lineCurrent) !== observation.lineCurrent) {
     return warning('Check Voltage and Current', `Use the line voltage and line current recorded for ${configuration} in the observation table.`)
@@ -222,7 +223,7 @@ export const submitErrorAnalysis = (state, configuration, observations) => {
   ]) {
     const value = String(entry[field] ?? '').trim()
     if (!isPowerInRange(value)) {
-      return warning('Check Error Analysis Values', `For ${configuration}, enter ${label} from 100 to 999 W.`)
+      return warning('Check Error Analysis Values', `For ${configuration}, enter ${label} from 100 to 999 W with at most two decimal places.`)
     }
   }
   const observation = observations.find(row => row.configuration === configuration)
