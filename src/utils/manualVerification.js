@@ -8,6 +8,7 @@ const ACCEPTED_POWER = {
 const MANUAL_FIELDS = ['lineVoltage', 'lineCurrent', 'cosPhi', 'power']
 const ERROR_FIELDS = ['errorMeasuredPower', 'errorTruePower', 'errorDenominator']
 const DECIMAL_NUMBER = /^(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/
+const isPowerInRange = value => DECIMAL_NUMBER.test(String(value)) && Number(value) >= 100 && Number(value) <= 999
 
 export const isAllowedVerificationInput = (field, value) => {
   const text = String(value)
@@ -23,7 +24,40 @@ export const isAllowedVerificationInput = (field, value) => {
     return /^(?:[01]?(?:\.[0-9]*)?)?$/.test(text)
       && (text === '' || text === '.' || Number(text) <= 1)
   }
+  if (field === 'power' || ERROR_FIELDS.includes(field)) {
+    // Allow incomplete values while typing; enforce the lower bound on submission.
+    return /^(?:[0-9]{1,3}(?:\.[0-9]*)?)?$/.test(text)
+      && (text === '' || Number(text) <= 999)
+  }
   return true
+}
+
+const fieldState = (value, correct, submitted) => (
+  String(value ?? '').trim() === '' && !submitted ? undefined : correct ? 'correct' : 'incorrect'
+)
+
+export const getVerificationFieldStates = (configuration, entry, observations) => {
+  const observation = observations.find(row => row.configuration === configuration)
+  const checks = {
+    lineVoltage: /^[0-9]{3}$/.test(entry.lineVoltage) && Number(entry.lineVoltage) === observation?.lineVoltage,
+    lineCurrent: /^[0-2](?:\.[0-9])?$/.test(entry.lineCurrent) && Number(entry.lineCurrent) === observation?.lineCurrent,
+    cosPhi: DECIMAL_NUMBER.test(entry.cosPhi) && Number(entry.cosPhi) === 1,
+    power: isPowerInRange(entry.power) && ACCEPTED_POWER[configuration]?.includes(Number(entry.power)),
+  }
+  return Object.fromEntries(MANUAL_FIELDS.map(field => [field, fieldState(entry[field], checks[field], Boolean(entry.feedback))]))
+}
+
+export const getErrorAnalysisFieldStates = (configuration, entry, observations) => {
+  const observation = observations.find(row => row.configuration === configuration)
+  const checks = {
+    errorMeasuredPower: Number(entry.errorMeasuredPower) === observation?.measuredPower,
+    errorTruePower: ACCEPTED_POWER[configuration]?.includes(Number(entry.errorTruePower)),
+    errorDenominator: ACCEPTED_POWER[configuration]?.includes(Number(entry.errorDenominator))
+      && Number(entry.errorDenominator) === Number(entry.errorTruePower),
+  }
+  return Object.fromEntries(ERROR_FIELDS.map(field => [field, fieldState(
+    entry[field], isPowerInRange(entry[field]) && checks[field], Boolean(entry.errorFeedback),
+  )]))
 }
 
 export const hasBothObservations = (observations) => LOAD_CONFIGURATIONS.every(
@@ -35,7 +69,8 @@ export const createVerificationState = () => ({
   errorFeedback: null,
   entries: Object.fromEntries(LOAD_CONFIGURATIONS.map((configuration) => [configuration, {
     lineVoltage: '', lineCurrent: '', cosPhi: '', power: '', verified: false, attempts: 0, feedback: null,
-    errorMeasuredPower: '', errorTruePower: '', errorDenominator: '', absoluteDifference: null, percentageError: null,
+    errorMeasuredPower: '', errorTruePower: '', errorDenominator: '', errorFeedback: null,
+    absoluteDifference: null, percentageError: null,
   }])),
 })
 
@@ -52,7 +87,7 @@ export const updateVerificationEntry = (state, configuration, field, value) => {
     entries: {
       ...state.entries,
       [configuration]: {
-        ...state.entries[configuration], [field]: value, verified: false, feedback: null,
+        ...state.entries[configuration], [field]: value, verified: false, feedback: null, errorFeedback: null,
         absoluteDifference: null, percentageError: null,
       },
     },
@@ -90,8 +125,8 @@ export const validateManualVerification = (configuration, entry, observations) =
     return warning('Check Power Factor', 'For this resistive load, cos φ = 1. Enter 1 and recalculate your power P.')
   }
   const power = String(entry.power ?? '').trim()
-  if (!DECIMAL_NUMBER.test(power) || !Number.isFinite(Number(power)) || Number(power) <= 0) {
-    return warning('Check Calculated Power', 'Manually enter a positive decimal value for your calculated power P.')
+  if (!isPowerInRange(power)) {
+    return warning('Check Calculated Power', 'Enter your calculated power P from 100 to 999 W.')
   }
   if (Number(entry.lineVoltage) !== observation.lineVoltage || Number(entry.lineCurrent) !== observation.lineCurrent) {
     return warning('Check Voltage and Current', `Use the line voltage and line current recorded for ${configuration} in the observation table.`)
@@ -140,21 +175,29 @@ export const isReportReady = (state, observations = []) => (
 )
 
 export const updateErrorAnalysisEntry = (state, configuration, field, value) => {
-  if (!state.enabled || !state.entries[configuration] || !ERROR_FIELDS.includes(field)) return state
+  if (!state.enabled || !state.entries[configuration]?.verified || !ERROR_FIELDS.includes(field)) return state
+  if (!isAllowedVerificationInput(field, value)) return state
   return {
     ...state,
     errorFeedback: null,
     entries: {
       ...state.entries,
-      [configuration]: { ...state.entries[configuration], [field]: value, absoluteDifference: null, percentageError: null },
+      [configuration]: { ...state.entries[configuration], [field]: value, errorFeedback: null, absoluteDifference: null, percentageError: null },
     },
   }
 }
 
 export const submitErrorAnalysis = (state, configuration, observations) => {
-  const warning = (title, description, narrationKey = 'errorIncorrect') => ({
-    ...state, errorFeedback: { type: 'warning', title, description, narrationKey },
-  })
+  const warning = (title, description, narrationKey = 'errorIncorrect') => {
+    const errorFeedback = { type: 'warning', title, description, narrationKey }
+    return {
+      ...state, errorFeedback,
+      entries: state.entries[configuration] ? {
+        ...state.entries,
+        [configuration]: { ...state.entries[configuration], errorFeedback, absoluteDifference: null, percentageError: null },
+      } : state.entries,
+    }
+  }
   if (!state.enabled || !hasBothObservations(observations)) {
     return warning('Error Analysis Locked', 'Record both Star and Delta observations to enable error analysis.')
   }
@@ -162,6 +205,9 @@ export const submitErrorAnalysis = (state, configuration, observations) => {
     return warning('Select a Load', 'Select Star or Delta in theoretical verification to calculate its percentage error.')
   }
   const entry = state.entries[configuration]
+  if (!entry.verified || !validateManualVerification(configuration, entry, observations).verified) {
+    return warning('Error Analysis Locked', `Verify the ${configuration} power calculation correctly before entering error analysis values.`)
+  }
   const missingCount = ERROR_FIELDS.filter(field => String(entry[field] ?? '').trim() === '').length
   if (missingCount) {
     return warning('Incomplete Values', missingCount === 1
@@ -175,9 +221,8 @@ export const submitErrorAnalysis = (state, configuration, observations) => {
     ['errorDenominator', 'True Value in the denominator'],
   ]) {
     const value = String(entry[field] ?? '').trim()
-    const requiresPositive = field !== 'errorMeasuredPower'
-    if (!DECIMAL_NUMBER.test(value) || !Number.isFinite(Number(value)) || (requiresPositive && Number(value) <= 0)) {
-      return warning('Check Error Analysis Values', `For ${configuration}, manually enter ${requiresPositive ? 'a positive' : 'a non-negative'} decimal value for ${label} in watts.`)
+    if (!isPowerInRange(value)) {
+      return warning('Check Error Analysis Values', `For ${configuration}, enter ${label} from 100 to 999 W.`)
     }
   }
   const observation = observations.find(row => row.configuration === configuration)
@@ -195,7 +240,7 @@ export const submitErrorAnalysis = (state, configuration, observations) => {
     ...state,
     entries: {
       ...state.entries,
-      [configuration]: { ...entry, absoluteDifference, percentageError },
+      [configuration]: { ...entry, errorFeedback: null, absoluteDifference, percentageError },
     },
     errorFeedback: {
       narrationKey: LOAD_CONFIGURATIONS.every(load => load === configuration || state.entries[load].percentageError != null)

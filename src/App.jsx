@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import './App.css'
 import './ConnectionEndpoints.css'
 import ConnectionLab from './components/ConnectionLab.jsx'
@@ -11,7 +12,7 @@ import CalculationSection from './components/CalculationSection.jsx'
 import SectionCard from './components/SectionCard.jsx'
 import WalkthroughStartButton from './walkthrough/components/WalkthroughStartButton.jsx'
 import { useLabAlerts } from './alerts/useLabAlerts.js'
-import { EXPERIMENT_MESSAGES } from './audio/simulationAudio.js'
+import { EXPERIMENT_MESSAGES, getConnectionCheckMessage, getWrongConnectionMessage } from './audio/simulationAudio.js'
 import { useNarrationPlayer } from './audio/useNarrationPlayer.js'
 import { useExperimentGuide } from './aiGuide/useExperimentGuide.js'
 import { generateExperimentReport } from './utils/reportGenerator.js'
@@ -35,11 +36,14 @@ const App = () => {
   const [verification, setVerification] = useState(createVerificationState)
   const [connectionAttempts, setConnectionAttempts] = useState(0)
   const [reportGenerated, setReportGenerated] = useState(false)
+  const [printRequested, setPrintRequested] = useState(false)
+  const [instructionsOpen, setInstructionsOpen] = useState(false)
   const [wiringReady, setWiringReady] = useState(false)
   const [wiringProgress, setWiringProgress] = useState(() => validateConnections([], 'Star'))
   const [status, setStatus] = useState('Select Star or Delta. Connect the wires and click CHECK, or use AUTO CONNECT to connect and verify automatically.')
   const [sessionStart, setSessionStart] = useState(() => Date.now())
   const circuitRef = useRef(null)
+  const configurationRef = useRef('Star')
   const conversionRef = useRef(null)
   const suppressWiringAlerts = useRef(false)
   const previousWiringProgress = useRef(validateConnections([], 'Star'))
@@ -48,7 +52,7 @@ const App = () => {
   const bothVerified = isVerificationComplete(verification)
   const nextConnection = wiringProgress.missingConnections[0]
   const errorsCalculated = LOAD_CONFIGURATIONS.every(load => verification.entries[load].percentageError != null)
-  const activeStep = bothRecorded
+  const activeStep = printRequested ? 'reset' : bothRecorded
     ? reportGenerated ? 'print' : !bothVerified ? 'calculations' : !errorsCalculated ? 'errors' : 'report'
     : alreadyRecorded ? 'configuration'
     : !connectionsVerified ? wiringProgress.isCorrect ? 'check' : 'connections'
@@ -56,9 +60,14 @@ const App = () => {
   const readings = getReadings(configuration, powerOn)
   const { play, playSequence, stop: stopPlayback } = useNarrationPlayer()
   const getProgress = useCallback(() => (
-    circuitRef.current?.validate() ?? validateConnections([], configuration)
-  ), [configuration])
+    circuitRef.current?.validate(configurationRef.current) ?? validateConnections([], configurationRef.current)
+  ), [])
   const guide = useExperimentGuide({ getProgress, onStatus: setStatus, play, playSequence, stopPlayback })
+
+  const advanceToReset = useCallback(() => {
+    setPrintRequested(true)
+    setInstructionsOpen(true)
+  }, [])
 
   useEffect(() => {
     const resize = () => setScale(getScale())
@@ -68,13 +77,16 @@ const App = () => {
 
 
   const announce = useCallback((key, options = {}) => {
-    const message = EXPERIMENT_MESSAGES[key]
+    const message = typeof key === 'string' ? EXPERIMENT_MESSAGES[key] : key
     setStatus(message.text)
     if (message.alert) {
-      clearAlerts()
-      showAlert({
-        title: message.title, description: message.text, type: message.type,
-        duration: Math.max(6500, message.text.length * 60), ...options,
+      // Replace the visible alert before its corresponding narration starts.
+      flushSync(() => {
+        clearAlerts()
+        showAlert({
+          title: message.title, description: message.text, type: message.type,
+          duration: Math.max(6500, message.text.length * 60), ...options,
+        })
       })
     }
     return play(message)
@@ -86,15 +98,22 @@ const App = () => {
   }, [])
 
   const handleWiringChange = useCallback(progress => {
+    progress = circuitRef.current?.validate(configurationRef.current) ?? progress
     const previous = previousWiringProgress.current
     previousWiringProgress.current = progress
     setWiringProgress(progress)
     setConnectionsVerified(false)
     setPowerOn(false)
     if (suppressWiringAlerts.current) return
-    const handledWrong = guide.updateProgress(progress, previous)
-    if (!handledWrong && progress.wrongConnections.length > previous.wrongConnections.length) {
-      announce('wrongConnection')
+    const newWrongConnection = progress.wrongConnections.some(connection => (
+      !previous.wrongConnections.some(previousConnection => (
+        previousConnection.label === connection.label && previousConnection.duplicate === connection.duplicate
+      ))
+    ))
+    if (newWrongConnection) {
+      guide.resumeConnections(announce(getWrongConnectionMessage(progress, configurationRef.current)), false)
+    } else {
+      guide.updateProgress(progress, previous)
     }
     const previousLoad = conversionRef.current
     if (previousLoad) {
@@ -105,16 +124,23 @@ const App = () => {
       ))
       if (removed) {
         conversionRef.current = null
+        guide.suspend()
+        const nextConfiguration = previousLoad === 'Star' ? 'Delta' : 'Star'
+        configurationRef.current = nextConfiguration
+        setConfiguration(nextConfiguration)
+        const nextProgress = circuitRef.current.validate(nextConfiguration)
+        previousWiringProgress.current = nextProgress
+        setWiringProgress(nextProgress)
         const announcement = announce(previousLoad === 'Star' ? 'starRemoved' : 'deltaRemoved')
-        if (configuration !== previousLoad) guide.resumeConnections(announcement)
-        else guide.suspend()
+        guide.resumeConnections(announcement)
       }
     }
-  }, [announce, configuration, guide])
+  }, [announce, guide])
 
   const selectConfiguration = nextConfiguration => {
     if (powerOn || nextConfiguration === configuration) return
     guide.suspend()
+    configurationRef.current = nextConfiguration
     setConfiguration(nextConfiguration)
     setConnectionsVerified(false)
     const progress = circuitRef.current?.validate(nextConfiguration) ?? validateConnections([], nextConfiguration)
@@ -127,7 +153,7 @@ const App = () => {
   const handleCheck = (automatic = false) => {
     if (!circuitRef.current || powerOn) return
     setConnectionAttempts(attempts => attempts + 1)
-    const result = circuitRef.current.validate()
+    const result = getProgress()
     setWiringProgress(result)
     setConnectionsVerified(result.isCorrect)
     if (result.isCorrect) {
@@ -135,11 +161,8 @@ const App = () => {
       announce(automatic ? 'autoConnect' : 'connectionsVerified')
       return
     }
-    if (!result.totalConnections) {
-      guide.resumeConnections(announce('emptyCheck'))
-      return
-    }
-    guide.resumeConnections(announce(result.wrongConnections.length ? 'wrongConnection' : 'emptyCheck'))
+    const message = getConnectionCheckMessage(result, configurationRef.current, connectionAttempts === 0)
+    guide.resumeConnections(announce(message), !message.silent)
   }
 
   const handleAutoConnect = () => {
@@ -148,7 +171,7 @@ const App = () => {
     conversionRef.current = null
     suppressWiringAlerts.current = true
     try {
-      circuitRef.current.autoConnect()
+      circuitRef.current.autoConnect(configurationRef.current)
     } finally {
       suppressWiringAlerts.current = false
     }
@@ -157,13 +180,20 @@ const App = () => {
 
   const togglePower = () => {
     if (powerOn) {
+      if (!alreadyRecorded) {
+        announce({
+          text: `Add the ${configuration} load readings to the observation table before turning OFF the MCB.`,
+          title: 'Record Readings First', type: 'warning', alert: true,
+        })
+        return
+      }
       guide.suspend()
       setPowerOn(false)
       conversionRef.current = configuration
       announce('mcbOff' + configuration)
       return
     }
-    if (!connectionsVerified || !circuitRef.current?.validate().isCorrect) {
+    if (!connectionsVerified || !getProgress().isCorrect) {
       guide.resumeConnections(announce('mcbBlocked'))
       return
     }
@@ -182,6 +212,7 @@ const App = () => {
     setObservations(nextObservations)
     setVerification(current => unlockVerification(current, nextObservations))
     setReportGenerated(false)
+    setPrintRequested(false)
     announce(nextObservations.length === 1 ? 'firstReading' : 'secondReading')
   }
 
@@ -189,6 +220,7 @@ const App = () => {
     clearAlerts()
     guide.stop()
     conversionRef.current = null
+    configurationRef.current = 'Star'
     suppressWiringAlerts.current = true
     try {
       circuitRef.current?.reset()
@@ -204,6 +236,7 @@ const App = () => {
     setVerification(createVerificationState())
     setConnectionAttempts(0)
     setReportGenerated(false)
+    setPrintRequested(false)
     setSessionStart(Date.now())
     announce('reset')
   }
@@ -212,6 +245,7 @@ const App = () => {
     if (!verification.enabled || !bothRecorded) return
     setVerification((current) => updateVerificationEntry(current, load, field, value))
     setReportGenerated(false)
+    setPrintRequested(false)
   }
 
   const calculatePower = (load) => {
@@ -222,6 +256,7 @@ const App = () => {
     }
     setVerification(next)
     setReportGenerated(false)
+    setPrintRequested(false)
     const result = next.entries[load].feedback
     announce(result.narrationKey ?? 'powerIncorrect')
   }
@@ -229,12 +264,14 @@ const App = () => {
   const updateErrorInput = (load, field, value) => {
     setVerification((current) => updateErrorAnalysisEntry(current, load, field, value))
     setReportGenerated(false)
+    setPrintRequested(false)
   }
 
   const calculateErrors = (load) => {
     const next = submitErrorAnalysis(verification, load, observations)
     setVerification(next)
     setReportGenerated(false)
+    setPrintRequested(false)
     const result = next.errorFeedback
     announce(result.narrationKey ?? 'errorIncorrect')
   }
@@ -248,8 +285,9 @@ const App = () => {
       requiresConfirmation: true,
       confirmLabel: 'OK',
       onConfirm: () => {
-        const opened = generateExperimentReport({ observations, sessionStart, verification, connectionAttempts })
+        const opened = generateExperimentReport({ observations, sessionStart, verification, connectionAttempts, onPrint: advanceToReset })
         setReportGenerated(opened)
+        setPrintRequested(false)
         if (!opened) setStatus('Allow pop-ups for this page, then click Generate Report again.')
       },
     })
@@ -275,6 +313,7 @@ const App = () => {
     setStatus(EXPERIMENT_MESSAGES.print.text)
     await play(EXPERIMENT_MESSAGES.print)
     window.print()
+    advanceToReset()
   }
 
   return (
@@ -284,11 +323,12 @@ const App = () => {
           <div id="app-render">
             <main className="simulation-shell" id="walkthrough-demo-experiment">
               <HeaderBoard />
-              <WalkthroughStartButton variant="side-tab" />
+              <WalkthroughStartButton variant="side-tab" highlighted={guide.highlightWalkthrough} />
               <section className="workspace-grid">
                 <aside className="left-panel">
                   <ActionButtons configuration={configuration} activeConnectionPair={nextConnection?.label}
                     activeInstructionStepId={activeStep} activeButtons={{ onAiGuide: guide.enabled }}
+                    instructionsOpen={instructionsOpen} onInstructionsChange={setInstructionsOpen}
                     disabledButtons={{ onAdd: !powerOn || !connectionsVerified, onAutoConnect: !wiringReady || powerOn,
                       onCheck: !wiringReady || powerOn || connectionsVerified, onAiGuide: !wiringReady }}
                     onAdd={recordObservation} onCheck={() => handleCheck()}

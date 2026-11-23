@@ -1,4 +1,5 @@
 import guideConfig from '../aiGuide/aiGuideConfig.json'
+import { CONNECTIONS } from '../utils/threePhaseExperiment.js'
 
 const audioFiles = import.meta.glob('./*.wav', { eager: true, import: 'default', query: '?url' })
 const sharedRecordings = new Set([
@@ -18,6 +19,38 @@ export const EXPERIMENT_MESSAGES = Object.fromEntries(
     ...message, audio: getAudioUrl(message.audioFile),
   }]),
 )
+
+export const getWrongConnectionMessage = (progress, configuration) => {
+  const candidates = [
+    ...progress.missingConnections.map(connection => connection.terminals),
+    ...CONNECTIONS[configuration],
+  ]
+  return {
+    ...EXPERIMENT_MESSAGES.wrongConnection,
+    text: progress.wrongConnections.map(({ label, duplicate }) => {
+      const terminals = label.split('-').map(Number)
+      const rightConnection = duplicate ? terminals
+        : candidates.find(pair => pair.includes(terminals[0]))
+          ?? candidates.find(pair => pair.includes(terminals[1]))
+      return `Wrong connection: ${label}${duplicate ? ' (duplicate)' : ''}. Right connection is: ${rightConnection.join('-')}${duplicate ? ' (keep only one wire)' : ''}.`
+    }).join(' '),
+  }
+}
+
+export const getConnectionCheckMessage = (progress, configuration, firstCheck = false) => {
+  // Report wrong wiring before checking for missing wires; these are separate alerts.
+  if (progress.wrongConnections.length) return getWrongConnectionMessage(progress, configuration)
+  if (firstCheck && progress.totalConnections === 0) return EXPERIMENT_MESSAGES.emptyCheck
+  const missing = progress.missingConnections.map(connection => connection.label)
+  return {
+    text: `${configuration} load. Add the missing connections: ${missing.join(', ')}. Then click CHECK again.`,
+    title: 'Missing Connections',
+    type: 'warning',
+    alert: true,
+    audio: null,
+    silent: true,
+  }
+}
 
 const connectionFiles = {
   '1-4': 'Click  terminal 1 to 4. .wav',

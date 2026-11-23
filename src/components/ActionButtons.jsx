@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { CONNECTIONS } from '../utils/threePhaseExperiment.js'
 import SectionCard from './SectionCard.jsx'
 import guideConfig from '../aiGuide/aiGuideConfig.json'
@@ -93,6 +93,8 @@ const ActionButtons = ({
   activeConnectionPair,
   activeButtons = {},
   activeInstructionStepId = 'connections',
+  instructionsOpen,
+  onInstructionsChange,
   disabledButtons = {},
   onAdd,
   onAiGuide,
@@ -102,7 +104,6 @@ const ActionButtons = ({
   onAutoConnect,
 }) => {
   const instructionSteps = getInstructionSteps(configuration)
-  const [instructionsOpen, setInstructionsOpen] = useState(false)
   const activeInstructionRef = useRef(null)
   const handlers = {
     onAdd,
@@ -136,7 +137,7 @@ const ActionButtons = ({
                 'aria-controls': 'experiment-instructions-panel',
                 'aria-expanded': instructionsOpen,
                 onClick: () => {
-                  setInstructionsOpen(!instructionsOpen)
+                  onInstructionsChange(!instructionsOpen)
                 },
               }
             : {
@@ -173,7 +174,7 @@ const ActionButtons = ({
               type="button"
               className="action-instructions-panel__close"
               aria-label="Close instructions"
-              onClick={() => setInstructionsOpen(false)}
+              onClick={() => onInstructionsChange(false)}
             >
               <CloseIcon />
             </button>

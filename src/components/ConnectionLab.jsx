@@ -27,10 +27,10 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
       updateTerminalConnectionStates(instance, lab)
       instance.repaintEverything()
     }
-    const reportWiringChange = () => {
+    const reportWiringChange = (selected = live.current.configuration) => {
       if (disposed) return
       updateTerminalConnectionStates(instance, lab)
-      live.current.onWiringChange(validateCircuit(instance, live.current.configuration))
+      live.current.onWiringChange(validateCircuit(instance, selected))
     }
     const changed = () => {
       if (disposed || changeQueued) return
@@ -67,12 +67,12 @@ const ConnectionLab = ({ configuration, powerOn, readings, scale, highlightedTer
         lab.addEventListener('keydown', removeWire)
         live.current.onReady({
           validate: (selected = live.current.configuration) => validateCircuit(instance, selected),
-          autoConnect: () => {
+          autoConnect: (selected = live.current.configuration) => {
             if (live.current.powerOn) return
-            autoConnectCircuit(instance, live.current.configuration)
+            autoConnectCircuit(instance, selected)
             refresh()
             changeQueued = false
-            reportWiringChange()
+            reportWiringChange(selected)
           },
           reset: () => {
             instance.deleteEveryConnection({ force: true })

@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { LOAD_CONFIGURATIONS } from '../utils/threePhaseExperiment.js'
-import { hasBothObservations, isAllowedVerificationInput } from '../utils/manualVerification.js'
+import {
+  getErrorAnalysisFieldStates, getVerificationFieldStates, hasBothObservations, isAllowedVerificationInput,
+} from '../utils/manualVerification.js'
 import { PercentIcon, FormulaIcon } from './Icons.jsx'
 
 const CalculationSection = ({ observations, verification, onChange, onCalculate, onErrorChange, onCalculateErrors }) => {
   const [configuration, setConfiguration] = useState('Star')
   const entry = verification.entries[configuration]
   const enabled = verification.enabled && hasBothObservations(observations)
+  const errorsEnabled = enabled && entry.verified
+  const fieldStates = getVerificationFieldStates(configuration, entry, observations)
+  const validationProps = state => ({ 'data-validation': state, 'aria-invalid': state === 'incorrect' ? true : undefined })
 
   const updateField = (field, value) => {
     if (isAllowedVerificationInput(field, value)) onChange(configuration, field, value)
@@ -24,7 +29,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
 
   const calculateErrors = (event) => {
     event.preventDefault()
-    if (enabled) onCalculateErrors(configuration)
+    if (errorsEnabled) onCalculateErrors(configuration)
   }
 
   return (
@@ -52,21 +57,21 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                 <label className="calculation-field">
                   <span>V<sub>L</sub> <small>(V)</small></span>
                   <input aria-label="Line voltage (V)" type="text" inputMode="numeric" maxLength={3}
-                    pattern="4([0-4][0-9]|50)" title="Enter a three-digit voltage from 400 to 450 V." required
+                    pattern="4([0-4][0-9]|50)" placeholder="Enter value" required {...validationProps(fieldStates.lineVoltage)}
                     value={entry.lineVoltage} onChange={(event) => updateField('lineVoltage', event.target.value)} />
                 </label>
                 <span className="calculation-formula__operator">×</span>
                 <label className="calculation-field">
                   <span>I<sub>L</sub> <small>(A)</small></span>
                   <input aria-label="Line current (A)" type="text" inputMode="decimal" maxLength={3}
-                    pattern="[01]([.][0-9])?|2([.]0)?" title="Enter 0 to 2 A with at most one decimal place." required
+                    pattern="[01]([.][0-9])?|2([.]0)?" placeholder="Enter value" required {...validationProps(fieldStates.lineCurrent)}
                     value={entry.lineCurrent} onChange={(event) => updateField('lineCurrent', event.target.value)} />
                 </label>
                 <span className="calculation-formula__operator">×</span>
                 <label className="calculation-field">
                   <span>cos φ</span>
                   <input aria-label="Power factor (cos phi)" aria-describedby="cos-phi-note" type="text" inputMode="decimal"
-                    pattern="(0([.][0-9]+)?|1([.]0+)?|[.][0-9]+)" title="Enter the power factor from 0 to 1. For this resistive load, enter 1." required
+                    pattern="(0([.][0-9]+)?|1([.]0+)?|[.][0-9]+)" placeholder="Enter value" required {...validationProps(fieldStates.cosPhi)}
                     value={entry.cosPhi ?? ''} onChange={(event) => updateField('cosPhi', event.target.value)} />
                 </label>
               </div>
@@ -75,7 +80,8 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                 <label className="calculation-result">
                   <span>P =</span>
                   <input aria-label="Calculated power (W)" type="text" inputMode="decimal" required
-                    value={entry.power} onChange={(event) => onChange(configuration, 'power', event.target.value)} />
+                    placeholder="Enter value" aria-describedby="cos-phi-note" {...validationProps(fieldStates.power)}
+                    value={entry.power} onChange={(event) => updateField('power', event.target.value)} />
                   <span>W</span>
                 </label>
                 <button className="calculation-button" type="submit">Calculate</button>
@@ -97,6 +103,8 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
             <p className="error-analysis-note">True Value = Theoretical Value</p>
             {LOAD_CONFIGURATIONS.map((load) => {
               const loadEntry = verification.entries[load]
+              const loadEnabled = enabled && loadEntry.verified && load === configuration
+              const errorStates = getErrorAnalysisFieldStates(load, loadEntry, observations)
               return (
                 <article className="error-analysis-load formula-tile" key={load} aria-label={`${load} error formula`}>
                   <div className="error-analysis-load__heading">
@@ -110,14 +118,14 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                         <label className="error-analysis-value">
                           <span>Measured Value <small>(W)</small></span>
                           <input className="error-analysis-input" aria-label={`${load} measured value in numerator (W)`} type="text" inputMode="decimal"
-                            required disabled={!enabled || load !== configuration} title="Manually enter the measured value in watts."
+                            required disabled={!loadEnabled} placeholder="Enter value" {...validationProps(errorStates.errorMeasuredPower)}
                             value={loadEntry.errorMeasuredPower ?? ''} onChange={(event) => onErrorChange(load, 'errorMeasuredPower', event.target.value)} />
                         </label>
                         <span className="error-analysis-minus" aria-hidden="true">−</span>
                         <label className="error-analysis-value">
                           <span>True Value <small>(W)</small></span>
                           <input className="error-analysis-input" aria-label={`${load} true value in numerator (W)`} type="text" inputMode="decimal"
-                            required disabled={!enabled || load !== configuration} title="Manually enter the theoretical value in watts."
+                            required disabled={!loadEnabled} placeholder="Enter value" {...validationProps(errorStates.errorTruePower)}
                             value={loadEntry.errorTruePower ?? ''} onChange={(event) => onErrorChange(load, 'errorTruePower', event.target.value)} />
                         </label>
                         <span className="error-analysis-absolute-bar" aria-hidden="true">|</span>
@@ -125,7 +133,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                       <label className="error-analysis-denominator">
                         <span>True Value <small>(W)</small></span>
                         <input className="error-analysis-input" aria-label={`${load} true value in denominator (W)`} type="text" inputMode="decimal"
-                          required disabled={!enabled || load !== configuration} title="Manually enter the theoretical value in the denominator in watts."
+                          required disabled={!loadEnabled} placeholder="Enter value" {...validationProps(errorStates.errorDenominator)}
                           value={loadEntry.errorDenominator ?? ''} onChange={(event) => onErrorChange(load, 'errorDenominator', event.target.value)} />
                       </label>
                     </div>
@@ -137,7 +145,8 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                 </article>
               )
             })}
-            <button className="calculation-button error-analysis-button" type="submit" disabled={!enabled}>Calculate Error</button>
+            <button className="calculation-button error-analysis-button" type="submit" disabled={!errorsEnabled}>Calculate Error</button>
+            {enabled && !entry.verified ? <p className="calculations-panel__hint">Verify the {configuration} power calculation to enable error analysis.</p> : null}
           </form>
         </div>
       </section>

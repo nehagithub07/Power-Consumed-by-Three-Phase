@@ -25,9 +25,8 @@ export const createReportHtml = ({
     const entry = verification.entries[row.configuration]
     const entered = (value) => String(value ?? '').trim() ? escapeHtml(value) : 'Not entered'
     const calculated = entry.percentageError != null && entry.errorDenominator != null
-    const difference = calculated ? Number(entry.absoluteDifference).toFixed(2) : 'Not calculated'
     const percentageError = calculated ? `${entry.percentageError.toFixed(2)}%` : 'Not calculated'
-    return `<tr><td>${escapeHtml(row.configuration)}</td><td>${entered(entry.errorMeasuredPower)}</td><td>${entered(entry.errorTruePower)}</td><td>${entered(entry.errorDenominator)}</td><td>${difference}</td><td>${percentageError}</td></tr>`
+    return `<tr><td>${escapeHtml(row.configuration)}</td><td>${entered(entry.errorMeasuredPower)}</td><td>${entered(entry.errorTruePower)}</td><td>${entered(entry.errorDenominator)}</td><td>${percentageError}</td></tr>`
   }).join('')
   const attempts = Object.values(verification.entries).reduce((total, entry) => total + entry.attempts, 0)
   const elapsedSeconds = Math.max(0, Math.round((Date.now() - sessionStart) / 1000))
@@ -273,6 +272,17 @@ tr:nth-child(even) {
   padding: 8px 10px;
   font-size: 13px;
 }
+.error-analysis-results th,
+.error-analysis-results td {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.error-analysis-results th:first-child,
+.error-analysis-results td:first-child {
+  width: 72px;
+  min-width: 72px;
+  white-space: nowrap;
+}
 .header-row {
   display: grid;
   grid-template-columns: 190px minmax(0, 1fr) 108px;
@@ -487,16 +497,14 @@ tr:nth-child(even) {
           <h3>Aim</h3>
           <p>The aim of the experiment is to study and measure the power consumed by a three-phase resistive load using the two-wattmeter method.</p>
           <h3>Simulation Summary</h3>
-          <p>Star and Delta load connections were tested using the two-wattmeter method. Line voltage, line current, and both wattmeter readings were recorded. The total measured power was compared with the user-calculated three-phase power, and the percentage error was calculated for each load.</p>
-          <p>Connection-check attempts including Auto Connect ${connectionAttempts}. Power-calculation attempts ${attempts}.</p>
-          <h3>Components and Key Parameters</h3>
+          <p> The guided walkthrough familiarized the user with the simulation interface. The circuit was connected, and the connections were verified successfully. The MCB was switched ON, and the line voltage, line current, and both wattmeter readings were recorded. The total measured power was recorded, after which the theoretical three-phase power and the percentage error were calculated for each load.</p>
+          <h3>Apparatus Used</h3>
           <ul class="two-column-list">
-            <li>MCB, 16 A, 3P, 415 V AC, 50 Hz</li>
-            <li>AC Voltmeter, 0-600 V</li>
-            <li>AC Ammeter, 0-10 A</li>
-            <li>Two AC Wattmeters, 0-600 W each</li>
-            <li>Three-phase resistive lamp load, 150 W per lamp</li>
-            <li>Star (Y) and Delta (Δ) load connections</li>
+            <li>MCB: 16 A, 3P, 415 V AC, 50 Hz</li>
+            <li>AC Voltmeter: 0 - 600 V</li>
+            <li>AC Ammeter: 0 - 10 A</li>
+            <li>Two AC Wattmeters: 0 - 600 W each</li>
+            <li>Three-phase resistive lamp load: 150 W per lamp</li>
             <li>Connecting leads</li>
           </ul>
         </div>
@@ -534,18 +542,17 @@ tr:nth-child(even) {
             </div>
             <div class="results-card">
               <h3>Error Analysis</h3>
-              <p>% Error = |Measured Value − True Value| / True Value × 100. True Value = Theoretical Value.</p>
               <div class="table-shell">
                 <table class="compact-table error-analysis-results" aria-label="Completed Star and Delta error analyses">
-                  <thead><tr><th>Load</th><th>Entered measured value (W)</th><th>Entered true value in numerator (W)</th><th>Entered true value in denominator (W)</th><th>Absolute difference (W)</th><th>Percentage error</th></tr></thead>
+                  <thead><tr><th>Load</th><th>Entered measured value (W)</th><th>Entered true value in numerator (W)</th><th>Entered true value in denominator (W)</th><th>Percentage error</th></tr></thead>
                   <tbody>${errorRows}</tbody>
                 </table>
               </div>
-              <p>The user entered the measured and true values for each load, then calculated the absolute difference and percentage error using Calculate Error.</p>
+              
             </div>
             <div class="results-card">
               <h3>Conclusion</h3>
-              <p>The manually calculated power values for both Star and Delta loads were verified. Total measured power is the sum of the two wattmeter readings, W<sub>1</sub> + W<sub>2</sub>. The Delta-connected load consumes more power and its lamps glow brighter. The Star-connected load consumes less power and its lamps glow less brightly. Phase voltage is V<sub>L</sub> / √3 in Star and V<sub>L</sub> in Delta. Error analysis was completed for both loads.</p>
+              <p>The Delta-connected load consumed more power, causing the lamps to glow brighter because each phase received the full line voltage (V<sub>L</sub>). The Star-connected load consumed less power and produced dimmer illumination because each phase received a reduced voltage of V<sub>L</sub>/√3. This difference in phase voltage explains the higher power consumption of the Delta-connected load. Error analysis was performed for both loads to compare the measured and theoretically calculated power values.</p>
             </div>
           </div>
         </div>
@@ -716,7 +723,7 @@ tr:nth-child(even) {
   `
 }
 
-export const prepareExperimentReport = ({ observations, sessionStart, verification, connectionAttempts = 0 }) => {
+export const prepareExperimentReport = ({ observations, sessionStart, verification, connectionAttempts = 0, onPrint }) => {
   if (!isReportReady(verification, observations)) return null
   const baseHref = new URL(import.meta.env.BASE_URL, window.location.origin).href
   const iitLogoSrc = new URL('../assets/IIT Logo.png', import.meta.url).href
@@ -745,6 +752,11 @@ export const prepareExperimentReport = ({ observations, sessionStart, verificati
       if (disposed) return false
       const reportWindow = window.open(reportUrl, '_blank')
       if (!reportWindow) return false
+      if (onPrint) {
+        reportWindow.addEventListener('load', () => {
+          reportWindow.addEventListener('afterprint', onPrint)
+        }, { once: true })
+      }
       window.setTimeout(dispose, 60000)
       reportWindow.focus()
       return true

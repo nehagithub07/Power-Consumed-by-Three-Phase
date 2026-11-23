@@ -78,6 +78,7 @@ export const useNarrationPlayer = () => {
   }), [])
 
   const playStep = useCallback(async (message, run) => {
+    if (message.silent) return true
     if (message.audio) {
       const result = await playAudio(message.audio)
       if (result !== false || runRef.current !== run) return result

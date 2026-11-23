@@ -30,12 +30,12 @@ export const useExperimentGuide = ({ getProgress, onStatus, play, playSequence, 
     changePhase('idle')
   }, [changePhase, stopPlayback, suspend])
 
-  const narrateProgress = useCallback((progress, previousConnection = null) => {
+  const narrateProgress = useCallback((progress, previousConnection = null, narrate = true) => {
     if (phaseRef.current !== 'connections') return
     const next = progress.missingConnections[0]
     expectedRef.current = next ?? null
     setHighlightedTerminals(next?.terminals ?? [])
-    if (progress.wrongConnections.length) return
+    if (!narrate || progress.wrongConnections.length) return
     const message = next ? getConnectionNarration(next) : EXPERIMENT_MESSAGES.connectionsComplete
     onStatus(message.text)
     if (previousConnection?.label === '1-4' && next) {
@@ -46,7 +46,7 @@ export const useExperimentGuide = ({ getProgress, onStatus, play, playSequence, 
     if (!next) changePhase('experiment')
   }, [changePhase, onStatus, play, playSequence])
 
-  const resumeConnections = useCallback(async announcement => {
+  const resumeConnections = useCallback(async (announcement, narrate = true) => {
     if (phaseRef.current === 'idle') return
     const run = ++runRef.current
     changePhase('waiting')
@@ -55,27 +55,18 @@ export const useExperimentGuide = ({ getProgress, onStatus, play, playSequence, 
     await announcement
     if (runRef.current !== run || phaseRef.current === 'idle') return
     changePhase('connections')
-    narrateProgress(getProgress())
+    narrateProgress(getProgress(), null, narrate)
   }, [changePhase, getProgress, narrateProgress])
 
   const updateProgress = useCallback((progress, previous) => {
-    if (phaseRef.current !== 'connections') return false
-    if (progress.wrongConnections.length > previous.wrongConnections.length) {
-      const next = progress.missingConnections[0]
-      expectedRef.current = next ?? null
-      setHighlightedTerminals(next?.terminals ?? [])
-      onStatus(EXPERIMENT_MESSAGES.wrongConnection.text)
-      playSequence([EXPERIMENT_MESSAGES.wrongConnection, next && getConnectionNarration(next)])
-      return true
-    }
+    if (phaseRef.current !== 'connections') return
     const expected = expectedRef.current
     const next = progress.missingConnections[0]
     if (next?.label !== expected?.label || (progress.isCorrect && !previous.isCorrect)
       || (previous.wrongConnections.length && !progress.wrongConnections.length)) {
       narrateProgress(progress, expected)
     }
-    return false
-  }, [narrateProgress, onStatus, playSequence])
+  }, [narrateProgress])
 
   const start = useCallback(async currentPrompt => {
     if (phaseRef.current !== 'idle') {
@@ -108,5 +99,8 @@ export const useExperimentGuide = ({ getProgress, onStatus, play, playSequence, 
   }, [onStatus, phase, play, resumeConnections, walkthroughOpen])
 
   useEffect(() => () => { runRef.current += 1 }, [])
-  return { enabled: phase !== 'idle', highlightedTerminals, resumeConnections, start, stop, suspend, updateProgress }
+  return {
+    enabled: phase !== 'idle', highlightWalkthrough: phase === 'walkthrough' && !walkthroughOpen,
+    highlightedTerminals, resumeConnections, start, stop, suspend, updateProgress,
+  }
 }

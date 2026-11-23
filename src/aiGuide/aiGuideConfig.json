@@ -96,9 +96,9 @@
     "wrongConnection": {
       "text": "This connection is wrong.",
       "audioFile": "Wrong connection.wav",
-      "title": "",
-      "type": "info",
-      "alert": false
+      "title": "Wrong Connection",
+      "type": "error",
+      "alert": true
     },
     "emptyCheck": {
       "text": "Please make the required connections as per the given instructions.",
