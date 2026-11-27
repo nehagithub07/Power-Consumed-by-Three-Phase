@@ -7,7 +7,7 @@ const ACCEPTED_POWER = {
 }
 const MANUAL_FIELDS = ['lineVoltage', 'lineCurrent', 'cosPhi', 'power']
 const ERROR_FIELDS = ['errorMeasuredPower', 'errorTruePower', 'errorDenominator']
-const DECIMAL_NUMBER = /^(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)$/
+const POWER_FACTOR_NUMBER = /^(?:0(?:\.[0-9])?|1(?:\.0)?|\.[0-9])$/
 const POWER_NUMBER = /^[0-9]{1,3}(?:\.[0-9]{1,2})?$/
 const isPowerInRange = value => POWER_NUMBER.test(String(value)) && Number(value) >= 100 && Number(value) <= 999
 
@@ -22,7 +22,7 @@ export const isAllowedVerificationInput = (field, value) => {
       && (text === '' || Number(text) <= 2)
   }
   if (field === 'cosPhi') {
-    return /^(?:[01]?(?:\.[0-9]*)?)?$/.test(text)
+    return /^(?:[01]?(?:\.[0-9]?)?)?$/.test(text)
       && (text === '' || text === '.' || Number(text) <= 1)
   }
   if (field === 'power' || ERROR_FIELDS.includes(field)) {
@@ -42,7 +42,7 @@ export const getVerificationFieldStates = (configuration, entry, observations) =
   const checks = {
     lineVoltage: /^[0-9]{3}$/.test(entry.lineVoltage) && Number(entry.lineVoltage) === observation?.lineVoltage,
     lineCurrent: /^[0-2](?:\.[0-9])?$/.test(entry.lineCurrent) && Number(entry.lineCurrent) === observation?.lineCurrent,
-    cosPhi: DECIMAL_NUMBER.test(entry.cosPhi) && Number(entry.cosPhi) === 1,
+    cosPhi: POWER_FACTOR_NUMBER.test(entry.cosPhi) && Number(entry.cosPhi) === 1,
     power: isPowerInRange(entry.power) && ACCEPTED_POWER[configuration]?.includes(Number(entry.power)),
   }
   return Object.fromEntries(MANUAL_FIELDS.map(field => [field, fieldState(entry[field], checks[field], Boolean(entry.feedback))]))
@@ -119,8 +119,8 @@ export const validateManualVerification = (configuration, entry, observations) =
     return warning('Check Line Current', 'Enter a line current from 0 to 2 A with at most one decimal place, such as 0.5.')
   }
   const cosPhi = String(entry.cosPhi ?? '').trim()
-  if (!DECIMAL_NUMBER.test(cosPhi) || Number(cosPhi) < 0 || Number(cosPhi) > 1) {
-    return warning('Check Power Factor', 'Manually enter cos φ as a decimal value from 0 to 1.')
+  if (!POWER_FACTOR_NUMBER.test(cosPhi)) {
+    return warning('Check Power Factor', 'Enter cos φ from 0 to 1 with at most one decimal place.')
   }
   if (Number(cosPhi) !== 1) {
     return warning('Check Power Factor', 'For this resistive load, cos φ = 1. Enter 1 and recalculate your power P.')
@@ -160,6 +160,14 @@ export const submitVerification = (state, configuration, observations) => {
 export const isVerificationComplete = (state) => Boolean(state?.enabled && LOAD_CONFIGURATIONS.every(
   (configuration) => state.entries?.[configuration]?.verified === true,
 ))
+
+export const getActiveVerificationStep = (state, configuration) => {
+  if (isVerificationComplete(state)
+    && LOAD_CONFIGURATIONS.every(load => state.entries[load].percentageError != null)) return 'report'
+  const entry = state.entries[configuration]
+  if (!entry.verified) return 'calculations'
+  return entry.percentageError == null ? 'errors' : 'other-calculations'
+}
 
 export const isReportReady = (state, observations = []) => (
   hasBothObservations(observations)

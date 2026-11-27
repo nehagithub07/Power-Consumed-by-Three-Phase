@@ -481,7 +481,7 @@ tr:nth-child(even) {
         </div>
         <div class="section report-overview">
           <div class="report-overview-top">
-            <p class="badge">AI Enhanced Basic Electrical Science Lab</p>
+            <p class="badge">AI - Enhanced Basic Electrical Science Lab</p>
             <p class="report-stamp">Generated on ${escapeHtml(reportDateText)}</p>
           </div>
           <p class="report-experiment-label">Experiment Title</p>

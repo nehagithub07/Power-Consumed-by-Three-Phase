@@ -156,6 +156,20 @@
       "type": "success",
       "alert": true
     },
+    "mcbOffBlockedStar": {
+      "text": "Add the Star load readings to the observation table before turning OFF the MCB.",
+      "audioFile": "Star Add MCB.wav",
+      "title": "Record Readings First",
+      "type": "warning",
+      "alert": true
+    },
+    "mcbOffBlockedDelta": {
+      "text": "Add the Delta load readings to the observation table before turning OFF the MCB.",
+      "audioFile": "Delta Add MCB.wav",
+      "title": "Record Readings First",
+      "type": "warning",
+      "alert": true
+    },
     "mcbOffStar": {
       "text": "The MCB has been turned OFF. Now remove the connections 17 to 19 and 19 to 21.",
       "audioFile": "MCB OFF STAR.wav",

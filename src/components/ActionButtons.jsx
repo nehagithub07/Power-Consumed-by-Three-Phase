@@ -68,10 +68,17 @@ const buttons = [
  
 ]
 
-const getInstructionSteps = configuration => [
+const getInstructionSteps = (configuration, calculationConfiguration) => [
   { id: 'ai-guide', title: 'AI Guide', content: guideConfig.description },
   ...guideConfig.steps.flatMap(step => {
     const item = { ...step }
+    if (step.id === 'errors') {
+      item.content = step.content.replace('In Error Analysis,', `In Error Analysis for the **${calculationConfiguration}** load,`)
+    }
+    if (step.id === 'other-calculations') {
+      const otherLoad = calculationConfiguration === 'Star' ? 'Delta' : 'Star'
+      item.content = step.content.replace('a different load', `the **${otherLoad}** load`)
+    }
     if (step.id === 'connections') {
       return [
         { ...item, groups: CONNECTIONS[configuration].map(([first, second], index) => ({
@@ -90,6 +97,7 @@ const getInstructionSteps = configuration => [
 
 const ActionButtons = ({
   configuration,
+  calculationConfiguration,
   activeConnectionPair,
   activeButtons = {},
   activeInstructionStepId = 'connections',
@@ -103,7 +111,7 @@ const ActionButtons = ({
   onReset,
   onAutoConnect,
 }) => {
-  const instructionSteps = getInstructionSteps(configuration)
+  const instructionSteps = getInstructionSteps(configuration, calculationConfiguration)
   const activeInstructionRef = useRef(null)
   const handlers = {
     onAdd,

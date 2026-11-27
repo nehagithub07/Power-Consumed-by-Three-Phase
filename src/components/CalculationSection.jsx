@@ -1,12 +1,10 @@
-import { useState } from 'react'
 import { LOAD_CONFIGURATIONS } from '../utils/threePhaseExperiment.js'
 import {
   getErrorAnalysisFieldStates, getVerificationFieldStates, hasBothObservations, isAllowedVerificationInput,
 } from '../utils/manualVerification.js'
 import { PercentIcon, FormulaIcon } from './Icons.jsx'
 
-const CalculationSection = ({ observations, verification, onChange, onCalculate, onErrorChange, onCalculateErrors }) => {
-  const [configuration, setConfiguration] = useState('Star')
+const CalculationSection = ({ configuration, onConfigurationChange, observations, verification, onChange, onCalculate, onErrorChange, onCalculateErrors }) => {
   const entry = verification.entries[configuration]
   const enabled = verification.enabled && hasBothObservations(observations)
   const errorsEnabled = enabled && entry.verified
@@ -19,7 +17,7 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
 
   const selectConfiguration = (event) => {
     const nextConfiguration = event.target.value
-    setConfiguration(nextConfiguration)
+    onConfigurationChange(nextConfiguration)
   }
 
   const calculate = (event) => {
@@ -70,8 +68,8 @@ const CalculationSection = ({ observations, verification, onChange, onCalculate,
                 <span className="calculation-formula__operator">×</span>
                 <label className="calculation-field">
                   <span>cos φ</span>
-                  <input aria-label="Power factor (cos phi)" aria-describedby="cos-phi-note" type="text" inputMode="decimal"
-                    pattern="(0([.][0-9]+)?|1([.]0+)?|[.][0-9]+)" placeholder="Enter value" required {...validationProps(fieldStates.cosPhi)}
+                  <input aria-label="Power factor (cos phi)" aria-describedby="cos-phi-note" type="text" inputMode="decimal" maxLength={3}
+                    pattern="(0([.][0-9])?|1([.]0)?|[.][0-9])" placeholder="Enter value" required {...validationProps(fieldStates.cosPhi)}
                     value={entry.cosPhi ?? ''} onChange={(event) => updateField('cosPhi', event.target.value)} />
                 </label>
               </div>

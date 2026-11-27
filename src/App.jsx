@@ -18,7 +18,7 @@ import { useExperimentGuide } from './aiGuide/useExperimentGuide.js'
 import { generateExperimentReport } from './utils/reportGenerator.js'
 import { CONNECTIONS, LOAD_CONFIGURATIONS, createObservation, getReadings, validateConnections } from './utils/threePhaseExperiment.js'
 import {
-  createVerificationState, hasBothObservations, isReportReady, isVerificationComplete,
+  createVerificationState, getActiveVerificationStep, hasBothObservations, isReportReady,
   submitErrorAnalysis, submitVerification, unlockVerification, updateErrorAnalysisEntry, updateVerificationEntry,
 } from './utils/manualVerification.js'
 
@@ -30,6 +30,7 @@ const App = () => {
   const { clearAlerts, showAlert } = useLabAlerts()
   const [scale, setScale] = useState(getScale)
   const [configuration, setConfiguration] = useState('Star')
+  const [calculationConfiguration, setCalculationConfiguration] = useState('Star')
   const [powerOn, setPowerOn] = useState(false)
   const [connectionsVerified, setConnectionsVerified] = useState(false)
   const [observations, setObservations] = useState([])
@@ -49,11 +50,10 @@ const App = () => {
   const previousWiringProgress = useRef(validateConnections([], 'Star'))
   const alreadyRecorded = observations.some((row) => row.configuration === configuration)
   const bothRecorded = hasBothObservations(observations)
-  const bothVerified = isVerificationComplete(verification)
   const nextConnection = wiringProgress.missingConnections[0]
-  const errorsCalculated = LOAD_CONFIGURATIONS.every(load => verification.entries[load].percentageError != null)
+  const verificationStep = getActiveVerificationStep(verification, calculationConfiguration)
   const activeStep = printRequested ? 'reset' : bothRecorded
-    ? reportGenerated ? 'print' : !bothVerified ? 'calculations' : !errorsCalculated ? 'errors' : 'report'
+    ? reportGenerated ? 'print' : verificationStep
     : alreadyRecorded ? 'configuration'
     : !connectionsVerified ? wiringProgress.isCorrect ? 'check' : 'connections'
     : !powerOn ? 'mcb' : 'reading'
@@ -181,10 +181,7 @@ const App = () => {
   const togglePower = () => {
     if (powerOn) {
       if (!alreadyRecorded) {
-        announce({
-          text: `Add the ${configuration} load readings to the observation table before turning OFF the MCB.`,
-          title: 'Record Readings First', type: 'warning', alert: true,
-        })
+        announce('mcbOffBlocked' + configuration)
         return
       }
       guide.suspend()
@@ -228,6 +225,7 @@ const App = () => {
       suppressWiringAlerts.current = false
     }
     setConfiguration('Star')
+    setCalculationConfiguration('Star')
     setPowerOn(false)
     setConnectionsVerified(false)
     setWiringProgress(validateConnections([], 'Star'))
@@ -303,9 +301,13 @@ const App = () => {
     if (connectionsVerified) currentPrompt = EXPERIMENT_MESSAGES.connectionsVerified
     if (powerOn) currentPrompt = EXPERIMENT_MESSAGES['mcbOn' + configuration]
     if (alreadyRecorded) currentPrompt = EXPERIMENT_MESSAGES.firstReading
-    if (bothRecorded) currentPrompt = EXPERIMENT_MESSAGES.secondReading
-    if (bothVerified) currentPrompt = EXPERIMENT_MESSAGES.powerCorrect
-    if (errorsCalculated) currentPrompt = EXPERIMENT_MESSAGES.secondErrorCorrect
+    if (bothRecorded) {
+      const promptKey = {
+        calculations: 'secondReading', errors: 'powerCorrect',
+        'other-calculations': 'firstErrorCorrect', report: 'secondErrorCorrect',
+      }[verificationStep]
+      currentPrompt = EXPERIMENT_MESSAGES[promptKey]
+    }
     guide.start(currentPrompt)
   }
 
@@ -326,7 +328,7 @@ const App = () => {
               <WalkthroughStartButton variant="side-tab" highlighted={guide.highlightWalkthrough} />
               <section className="workspace-grid">
                 <aside className="left-panel">
-                  <ActionButtons configuration={configuration} activeConnectionPair={nextConnection?.label}
+                  <ActionButtons configuration={configuration} calculationConfiguration={calculationConfiguration} activeConnectionPair={nextConnection?.label}
                     activeInstructionStepId={activeStep} activeButtons={{ onAiGuide: guide.enabled }}
                     instructionsOpen={instructionsOpen} onInstructionsChange={setInstructionsOpen}
                     disabledButtons={{ onAdd: !powerOn || !connectionsVerified, onAutoConnect: !wiringReady || powerOn,
@@ -359,7 +361,8 @@ const App = () => {
                 </section>
               </section>
             </main>
-            <CalculationSection key={sessionStart} observations={observations} verification={verification}
+            <CalculationSection configuration={calculationConfiguration} onConfigurationChange={setCalculationConfiguration}
+              observations={observations} verification={verification}
               onChange={updateCalculation} onCalculate={calculatePower} onErrorChange={updateErrorInput}
               onCalculateErrors={calculateErrors} />
             <footer className="simulation-footer">&copy; 2026 Virtual Labs | IIT Roorkee</footer>
